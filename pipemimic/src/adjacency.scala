@@ -65,5 +65,69 @@ object Adjacency {
 
   /* Path Backtrace */
 
-  def PathBacktrace = ???
+  def PathBacktrace(g: List[Tuple2[Int, Int]], prev: List[Option[Int]], src: Int, dst: Int): List[Int] = {
+    require(src >= 0 && dst >= 0)
+
+    def helper(prev: List[Option[Int]], src: Int, dst: Int, unroll: Int): List[Int] = {
+      require(src >= 0 && dst >= 0 && unroll >= 0)
+
+      val prevs = if (dst < prev.length) prev(dst) else None
+      assert(unroll != 0, "PathBacktrace' iteration limit exceeded")
+      prevs match {
+        case Some(value) => {
+          if (value == src) {
+            List(value)
+          } else {
+            helper(prev, src, value, unroll - 1).appended(value)
+          }
+        }
+        case None => /* shouldn't reach here */ List.empty
+      }
+    }
+
+    val r = helper(prev, src, dst, g.length)
+    r match {
+      case Nil => Nil
+      case _ => r.appended(dst)
+    }
+  }
+
+  def PathBacktraceAdj(g: AdjacencyList, prev: List[Option[Int]], src: Int, dst: Int): List[Int] = {
+    require(src >= 0 && dst >= 0)
+
+    def helper(prev: List[Option[Int]], src: Int, dst: Int, unroll: Int): List[Int] = {
+      require(src >= 0 && dst >= 0 && unroll >= 0)
+
+      val prevs = if (dst < prev.length) prev(dst) else None
+      assert(unroll != 0 && prevs != None, "PathBacktrace' iteration limit exceeded")
+      prevs match {
+        case Some(value) => {
+          if (value == src) {
+            List(value)
+          } else {
+            helper(prev, src, value, unroll - 1).appended(value)
+          }
+        }
+        case None => /* shouldn't reach here */ List.empty
+      }
+    }
+
+    val r = helper(prev, src, dst, g.length)
+    r match {
+      case Nil => Nil
+      case _ => r.appended(dst)
+    }
+  }
+
+  def FindPath(g: List[Tuple2[Int, Int]], src: Int, dst: Int): List[Int] = {
+    Dijkstra(g, src) match {
+      case (_, prev) => PathBacktrace(g, prev, src, dst)
+    }
+  }
+
+  def FindPathAdj(g: AdjacencyList, src: Int, dst: Int): List[Int] = {
+    DijkstraAdj(g, src) match {
+      case (_, prev) => PathBacktraceAdj(g, prev, src, dst)
+    }
+  }
 }

@@ -40,4 +40,16 @@ class DijkstraTest extends AnyFlatSpec {
 
     assert(Dijkstra(exampleGraph, 0) == result)
   }
+
+  "FindPath" should "be alright too" in {
+    val exampleGraph = (0, 3) :: (2, 0) :: (2, 3) :: (3, 1) :: Nil
+    val result = List(2, 3)
+    assert(FindPath(exampleGraph, 2, 3) == List(2, 3))
+
+    assert(PathBacktraceAdj(List(List(1)), List(None, Some(0)), 0, 1) == List(0, 1))
+
+    assert(FindPath(List((0, 1), (0, 2), (1, 2), (2, 3), (3, 0)), 0, 0) == List(0, 2, 3, 0))
+
+    assert(FindPath(List((0, 1), (0, 2)), 1, 2).isEmpty)
+  }
 }
