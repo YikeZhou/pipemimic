@@ -111,4 +111,8 @@ object ListUtils {
       case head :: next => head :: AppendToLast(x, next)
     }
   }
+
+  def Tail[T](x: List[T]): List[T] = {
+    if (x.isEmpty) x else x.tail
+  }
 }
