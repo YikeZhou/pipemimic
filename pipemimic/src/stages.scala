@@ -44,8 +44,8 @@ object Stages {
   type LocalReordering = List[LocalOrdering] => LocalOrdering => LocalOrdering
 
   def TransferredEdge(paths: PathMap, v1: Location, v2: Location, e1: Event, e2: Event): Boolean = {
-    val p1 = Nth(e1.eiid, paths, List.empty[(Location, Location)])
-    val p2 = Nth(e2.eiid, paths, List.empty[(Location, Location)])
+    val p1 = NthDefault(e1.eiid, paths, List.empty[(Location, Location)])
+    val p2 = NthDefault(e2.eiid, paths, List.empty[(Location, Location)])
     p1.contains((v1, v2)) && p2.contains((v1, v2))
   }
 
@@ -100,6 +100,36 @@ object Stages {
 
   type GlobalEvent = (Location, Eiid)
   type GlobalGraph = List[(GlobalEvent, GlobalEvent, String)]
+
+  def GlobalEventString(p: Pipeline, ge: GlobalEvent): String = {
+    val (n, e) = ge
+    (NthError(p.stages, n), n - p.stages.length) match {
+      case (Some(s), _) => s"Event $e at ${s.name}"
+      case (None, 0) => s"CacheLine $e Create"
+      case (None, 1) => s"CacheLine $e Invalidate"
+      case _ => "Unknown"
+    }
+  }
+
+  def GraphString(g: List[(Int, Int, String)]): String = {
+    g match {
+      case head :: next => {
+        val (s, d) = (head._1, head._2)
+        s"${GraphString(next)}$s --${head._3}-> $d\n"
+      }
+      case Nil => ""
+    }
+  }
+
+  def GlobalGraphString(g: GlobalGraph): String = {
+    g match {
+      case head :: next => {
+        val (s, d) = (head._1, head._2)
+        s"${GlobalGraphString(next)}(${s._1}, ${s._2}) --${head._3}-> (${d._1}, ${d._2})\n"
+      }
+      case Nil => ""
+    }
+  }
 
   /* Pipeline Model */
 
@@ -220,7 +250,7 @@ object Stages {
       case Nil => Nil
       case head :: next => {
         val default: SpecialEdgeMap = _ => _ => _ => List.empty[(GlobalEvent, GlobalEvent, String)]
-        val m = Nth(head, p.stages.map(_.specialEdges), default)
+        val m = NthDefault(head, p.stages.map(_.specialEdges), default)
         LocationSpecialEdges(e, events, m) ::: PathPipelineSpecialEdges(next, e, events, p)
       }
     }

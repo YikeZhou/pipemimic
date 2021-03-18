@@ -1,5 +1,7 @@
 package pipemimic
 
+import Stages.{Pipeline, GlobalEvent, GlobalGraph}
+
 object ListUtils {
 
   /* Get certain element of a list */
@@ -16,11 +18,19 @@ object ListUtils {
     if (x.isEmpty) x else x.tail
   }
 
-  def Nth[T](n: Int, l: List[T], default: T): T = {
+  def NthDefault[T](n: Int, l: List[T], default: T): T = {
     require(n >= 0)
     l.lift(n) match {
       case None => default
       case Some(value) => value
+    }
+  }
+
+  def NthError[T](l: List[T], n: Int): Option[T] = {
+    (n, l) match {
+      case (0, head :: _) => Some(head)
+      case (n, _ :: next) if n > 0 => NthError(l, n)
+      case _ => None
     }
   }
 
@@ -164,5 +174,39 @@ class TinyTimer(name: String) {
   override def toString(): String = {
     val timeElapsed = (System.nanoTime() - start) / 1000000
     if (init) s"Timer<$name>: $timeElapsed ms" else "Error: not initialized"
+  }
+}
+
+object GlobalGraphIDUtils {
+  def geid(p: Pipeline, ge: GlobalEvent): Int = {
+    ge match {
+      case (n, e) => e * p.stages.length + n
+    }
+  }
+
+  def gepid(p: Pipeline, gep: (GlobalEvent, GlobalEvent, String)): (Int, Int, String) = {
+    (geid(p, gep._1), geid(p, gep._2), gep._3)
+  }
+
+  def getid(p: Pipeline, t: GraphTree[GlobalEvent]): GraphTree[Int] = {
+    t match {
+      case GraphTreeOr(l) => GraphTreeOr(l.map(getid(p, _)))
+      case GraphTreeAnd(l) => GraphTreeAnd(l.map(getid(p, _)))
+      case GraphTreeLeaf(s, l) => GraphTreeLeaf(s, l.map(gepid(p, _)))
+    }
+  }
+
+  def ungeid(p: Pipeline, n: Int): (Stages.Location, ProgramOrderIndex) = {
+    def helper(p: Pipeline, n: Int, s: Int, e: Int): (Stages.Location, ProgramOrderIndex) = {
+      if (s == p.stages.length) {
+        if (n == 0) (0, e + 1) else helper(p, n - 1, 1, e + 1)
+      } else if (s < p.stages.length) {
+        if (n == 0) (s, e) else helper(p, n - 1, s + 1, e)
+      } else {
+        /* ERROR */ (0, 0)
+      }
+    }
+    
+    helper(p, n, 0, 0)
   }
 }

@@ -53,10 +53,10 @@ object TopologicalSort {
     require(unroll >= 0 && n >= 0)
 
     omr match {
-      case (m, TotalOrdering(r)) => (unroll, Nth(n, m, Marking.Unmarked)) match {
+      case (m, TotalOrdering(r)) => (unroll, NthDefault(n, m, Marking.Unmarked)) match {
         case (u, Marking.Unmarked) if u > 0 => {
           val _m = replaceNth(m, n, Marking.MarkedTemp, Marking.Unmarked)
-          val adjOfN = Nth(n, g, Nil)
+          val adjOfN = NthDefault(n, g, Nil)
           adjOfN.foldLeft[(List[Marking.Value], TopSortResult)]((_m, TotalOrdering(r)))((tuple, i) => TopSortVisit(u - 1, g, tuple, i)) match {
             case (__m, TotalOrdering(__r)) => (replaceNth(__m, n, Marking.Marked, Marking.Unmarked), TotalOrdering(List(n) ::: __r))
             case t => t
@@ -72,7 +72,7 @@ object TopologicalSort {
 
   def KeepIfIn(l: List[Int], b: List[Boolean]): List[Int] = {
     l match {
-      case head :: next => if (Nth(head, b, false)) head :: KeepIfIn(next, b) else KeepIfIn(next, b)
+      case head :: next => if (NthDefault(head, b, false)) head :: KeepIfIn(next, b) else KeepIfIn(next, b)
       case Nil => Nil
     }
   }
