@@ -8,6 +8,10 @@ object ListUtils {
     if (l.isEmpty) None else Some(l.last)
   }
 
+  def Head[T](default: T, l: List[T]): T = {
+    if (l.isEmpty) default else l.head
+  }
+
   def Tail[T](x: List[T]): List[T] = {
     if (x.isEmpty) x else x.tail
   }
@@ -145,5 +149,20 @@ object CartesianUtils {
   def CartesianProductPairs[A, B](h: List[A], t: List[B]): List[(A, B)] = {
     def helper[A, B](h: A, t: List[B]): List[(A, B)] = t.map((h, _))
     h.map(helper(_, t)).foldLeft(List.empty[(A, B)])(_ ++ _)
+  }
+}
+
+class TinyTimer(name: String) {
+  var start: Long = _
+  var init = false
+
+  def reset = {
+    init = true
+    start = System.nanoTime()
+  }
+
+  override def toString(): String = {
+    val timeElapsed = (System.nanoTime() - start) / 1000000
+    if (init) s"Timer<$name>: $timeElapsed ms" else "Error: not initialized"
   }
 }
