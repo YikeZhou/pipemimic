@@ -3,7 +3,7 @@ package pipemimic
 import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 
-import ListUtils.CartesianProduct
+import CartesianUtils.CartesianProduct
 
 class CartesianProductTest extends AnyFlatSpec {
   "CartesianProduct" should "return the cartesian product of lists" in {

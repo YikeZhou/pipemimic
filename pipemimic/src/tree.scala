@@ -1,5 +1,7 @@
 package pipemimic
 
+import CartesianUtils.CartesianProduct
+
 abstract class GraphTree[T]
 
 case class GraphTreeOr[T](l: List[GraphTree[T]]) extends GraphTree[T]
@@ -15,7 +17,7 @@ object GraphTree {
     }
     t match {
       case GraphTreeOr(l) => l.map(DNFOfTree).foldLeft(List[Tuple2[String, List[Tuple3[T, T, String]]]]())(_ ++ _)
-      case GraphTreeAnd(l) => ListUtils.CartesianProduct(l.map(DNFOfTree)).map(_.foldLeft(("", List[Tuple3[T, T, String]]()))((x, y) => joinGraphs(x, y)))
+      case GraphTreeAnd(l) => CartesianProduct(l.map(DNFOfTree)).map(_.foldLeft(("", List[Tuple3[T, T, String]]()))((x, y) => joinGraphs(x, y)))
       case GraphTreeLeaf(s, l) => List((s, l))
     }
   }
