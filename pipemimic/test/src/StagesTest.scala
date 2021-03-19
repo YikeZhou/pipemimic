@@ -5,6 +5,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import Stages._
 import ListUtils._
+import PreservedProgramOrder.GraphsToVerifyPPOWithAnyAddresses
 
 class StagesTest extends AnyFlatSpec {
   "PathTC" should "return transitive closure of a given path" in {
@@ -110,6 +111,14 @@ class StagesTest extends AnyFlatSpec {
     ))
 
     assert(myGlobalEdges == leaf) // EdgesExample3
+
+    /* ppo test */
+    println("Start ppo checking")
+    val WRRW = List(Direction.W, Direction.R, Direction.R, Direction.W)
+
+    val sampleValidation = GraphsToVerifyPPOWithAnyAddresses(myPipeline, WRRW, 0, 3)
+    println("Finish sample validation")
+    println(sampleValidation)
   }
 
   "EventsSortedByFirstLocation" should "sort correctly" in {
