@@ -6,6 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import Stages._
 import ListUtils._
 import PreservedProgramOrder.GraphsToVerifyPPOWithAnyAddresses
+import Execution.GraphsToVerifyExecution
 
 class StagesTest extends AnyFlatSpec {
   "PathTC" should "return transitive closure of a given path" in {
@@ -14,7 +15,7 @@ class StagesTest extends AnyFlatSpec {
     assert(PathTransitiveClosure(path) == tc)
   }
 
-  "Edges" should "work well" in {
+  "Stages & PPO & Execution" should "work well" in {
     val e0 = Event(0, Iiid(0, 0), Access(Direction.W, 0, 1))
     val e1 = Event(1, Iiid(0, 1), Access(Direction.R, 0, 0))
     val e2 = Event(2, Iiid(0, 2), Access(Direction.R, 0, 0))
@@ -112,13 +113,20 @@ class StagesTest extends AnyFlatSpec {
 
     assert(myGlobalEdges == leaf) // EdgesExample3
 
-    /* ppo test */
+    val evt00 = Event(0, Iiid(0, 0), Access(Direction.W, 0, 1))
+    val evt10 = Event(1, Iiid(1, 0), Access(Direction.R, 0, 1))
+
+    println("Start sample validation execution")
+    val sampleValidationExecution = GraphsToVerifyExecution("Sample", myPipeline, List(evt00, evt10), List((0, 1)))
+    println(sampleValidationExecution) // EdgesExample5
+
+    /* FIXME ppo test */
     println("Start ppo checking")
     val WRRW = List(Direction.W, Direction.R, Direction.R, Direction.W)
 
-    val sampleValidation = GraphsToVerifyPPOWithAnyAddresses(myPipeline, WRRW, 0, 3)
+    val sampleValidationPPO = GraphsToVerifyPPOWithAnyAddresses(myPipeline, WRRW, 0, 3)
     println("Finish sample validation")
-    println(sampleValidation)
+    println(sampleValidationPPO)
   }
 
   "EventsSortedByFirstLocation" should "sort correctly" in {
