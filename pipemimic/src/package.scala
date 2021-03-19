@@ -43,5 +43,7 @@ package object pipemimic {
         case Access(d, l, v) => l
       }
     }
+
+    def isWrite: Boolean = this.dirn == Direction.W
   }
 }
