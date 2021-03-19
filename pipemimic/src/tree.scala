@@ -9,7 +9,7 @@ case class GraphTreeAnd[T](l: List[GraphTree[T]]) extends GraphTree[T]
 case class GraphTreeLeaf[T](s: String, l: List[Tuple3[T, T, String]]) extends GraphTree[T]
 
 object GraphTree {
-  def GraphTreeEmptyLeaf = GraphTreeLeaf("", List.empty)
+  def GraphTreeEmptyLeaf[T] = GraphTreeLeaf("", List.empty[(T, T, String)])
 
   def DNFOfTree[T](t: GraphTree[T]): List[Tuple2[String, List[Tuple3[T, T, String]]]] = {
     def joinGraphs(a: Tuple2[String, List[Tuple3[T, T, String]]], b: Tuple2[String, List[Tuple3[T, T, String]]]): Tuple2[String, List[Tuple3[T, T, String]]] = {
