@@ -2,12 +2,14 @@ package pipemimic
 
 import ListUtils._
 
+import scala.annotation.tailrec
+
 object Adjacency {
 
   /* Adjacency Lists */
   type AdjacencyList = List[List[Int]]
 
-  def AdjacencyListFromEdges(l: List[Tuple2[Int, Int]]): AdjacencyList = {
+  def AdjacencyListFromEdges(l: List[(Int, Int)]): AdjacencyList = {
     l match {
       case head :: next => AppendToNth(AdjacencyListFromEdges(next), head._1, head._2)
       case Nil => Nil
@@ -16,7 +18,7 @@ object Adjacency {
 
   /* Dijkstra's algorithm */
   
-  def DijkstraStep(g: AdjacencyList, src: Int, queue: List[Int], prevs: List[Option[Int]], v: Int): Tuple2[List[Int], List[Option[Int]]] = {
+  def DijkstraStep(g: AdjacencyList, src: Int, queue: List[Int], prevs: List[Option[Int]], v: Int): (List[Int], List[Option[Int]]) = {
     require(v >= 0)
     val adjacentNodes = if (v < g.length) g(v) else List.empty[Int]
     if (adjacentNodes.contains(src)) {
@@ -31,19 +33,19 @@ object Adjacency {
     }
   }
 
-  def DijkstraAdj(g: AdjacencyList, src: Int): Tuple2[List[Int], List[Option[Int]]] = {
+  def DijkstraAdj(g: AdjacencyList, src: Int): (List[Int], List[Option[Int]]) = {
     require(src >= 0)
-    def helper(unroll: Int, g: AdjacencyList, src: Int, queue: List[Int], reachable: List[Int], prevs: List[Option[Int]]): Tuple2[List[Int], List[Option[Int]]] = {
+    @tailrec
+    def helper(unroll: Int, g: AdjacencyList, src: Int, queue: List[Int], reachable: List[Int], prevs: List[Option[Int]]): (List[Int], List[Option[Int]]) = {
       require(unroll >= 0)
       if (unroll == 0) {
         (reachable, prevs) /* shouldn't happen ! */
       } else {
         queue match {
           case Nil => (reachable, prevs)
-          case head :: next => {
+          case head :: _ =>
             val temp = DijkstraStep(g, src, queue, prevs, head)
             helper(unroll - 1, g, src, Tail(temp._1), AddUnique(reachable, head), temp._2)
-          }
         }
       }
     }
@@ -54,18 +56,18 @@ object Adjacency {
     val prevs = r_prevs._2
     val nth_prevs = if (src < prevs.length) prevs(src) else None
     nth_prevs match {
-      case Some(value) => (r, prevs)
+      case Some(_) => (r, prevs)
       case None => (Tail(r), prevs)
     }
   }
 
-  def Dijkstra(g: List[Tuple2[Int, Int]], src: Int): Tuple2[List[Int], List[Option[Int]]] = {
+  def Dijkstra(g: List[(Int, Int)], src: Int): (List[Int], List[Option[Int]]) = {
     DijkstraAdj(AdjacencyListFromEdges(g), src)
   }
 
   /* Path Backtrace */
 
-  def PathBacktrace(g: List[Tuple2[Int, Int]], prev: List[Option[Int]], src: Int, dst: Int): List[Int] = {
+  def PathBacktrace(g: List[(Int, Int)], prev: List[Option[Int]], src: Int, dst: Int): List[Int] = {
     require(src >= 0 && dst >= 0)
 
     def helper(prev: List[Option[Int]], src: Int, dst: Int, unroll: Int): List[Int] = {
@@ -74,13 +76,12 @@ object Adjacency {
       val prevs = if (dst < prev.length) prev(dst) else None
       assert(unroll != 0, "PathBacktrace' iteration limit exceeded")
       prevs match {
-        case Some(value) => {
+        case Some(value) =>
           if (value == src) {
             List(value)
           } else {
             helper(prev, src, value, unroll - 1).appended(value)
           }
-        }
         case None => /* shouldn't reach here */ List.empty
       }
     }
@@ -99,15 +100,14 @@ object Adjacency {
       require(src >= 0 && dst >= 0 && unroll >= 0)
 
       val prevs = if (dst < prev.length) prev(dst) else None
-      assert(unroll != 0 && prevs != None, "PathBacktrace' iteration limit exceeded")
+      assert(unroll != 0 && prevs.isDefined, "PathBacktrace' iteration limit exceeded")
       prevs match {
-        case Some(value) => {
+        case Some(value) =>
           if (value == src) {
             List(value)
           } else {
             helper(prev, src, value, unroll - 1).appended(value)
           }
-        }
         case None => /* shouldn't reach here */ List.empty
       }
     }
@@ -119,7 +119,7 @@ object Adjacency {
     }
   }
 
-  def FindPath(g: List[Tuple2[Int, Int]], src: Int, dst: Int): List[Int] = {
+  def FindPath(g: List[(Int, Int)], src: Int, dst: Int): List[Int] = {
     Dijkstra(g, src) match {
       case (_, prev) => PathBacktrace(g, prev, src, dst)
     }

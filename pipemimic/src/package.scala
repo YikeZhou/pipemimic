@@ -34,13 +34,13 @@ package object pipemimic {
   case class Event(eiid: Eiid, iiid: Iiid, action: Action) {
     def dirn: Direction.Value = {
       this.action match {
-        case Access(d, l, v) => d
+        case Access(d, _, _) => d
       }
     }
 
     def loc: Location = {
       this.action match {
-        case Access(d, l, v) => l
+        case Access(_, l, _) => l
       }
     }
 

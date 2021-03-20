@@ -3,6 +3,8 @@ package pipemimic
 import Adjacency.{AdjacencyList, AdjacencyListFromEdges, FindPathAdj}
 import ListUtils._
 
+import scala.annotation.tailrec
+
 abstract class TopSortResult
 
 case class TotalOrdering(l: List[Int]) extends TopSortResult
@@ -31,17 +33,17 @@ object TopologicalSort {
       }
     }
     /* Include the source and dest of each edge as connected */
+    @tailrec
     def includeSource(g: AdjacencyList, b: List[Boolean], n: Int): List[Boolean] = {
       require(n >= 0)
 
       g match {
-        case head :: next => {
+        case head :: next =>
           val _b = head match {
             case _ :: _ => /* outgoing edge from this node - edge is connected */ replaceNth(b, n, true, false)
             case Nil => /* no outgoing edge from this node */ b
           }
           includeSource(next, checkDestination(head, _b), n + 1)
-        }
         case Nil => b
       }
     }
@@ -54,14 +56,13 @@ object TopologicalSort {
 
     omr match {
       case (m, TotalOrdering(r)) => (unroll, NthDefault(n, m, Marking.Unmarked)) match {
-        case (u, Marking.Unmarked) if u > 0 => {
+        case (u, Marking.Unmarked) if u > 0 =>
           val _m = replaceNth(m, n, Marking.MarkedTemp, Marking.Unmarked)
           val adjOfN = NthDefault(n, g, Nil)
           adjOfN.foldLeft[(List[Marking.Value], TopSortResult)]((_m, TotalOrdering(r)))((tuple, i) => TopSortVisit(u - 1, g, tuple, i)) match {
             case (__m, TotalOrdering(__r)) => (replaceNth(__m, n, Marking.Marked, Marking.Unmarked), TotalOrdering(List(n) ::: __r))
             case t => t
           }
-        }
         case (u, Marking.Marked) if u > 0 => omr
         case (0, _) => (m, CycleFound(List(1)))
         case _ => (m, CycleFound(FindPathAdj(g, n, n)))

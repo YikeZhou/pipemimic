@@ -1,6 +1,8 @@
 package pipemimic
 
-import Stages.{Pipeline, GlobalEvent, GlobalGraph}
+import pipemimic.Stages.{GlobalEvent, Pipeline}
+
+import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
 
 object ListUtils {
@@ -8,18 +10,19 @@ object ListUtils {
   /* Get certain element of a list */
 
   def LastError[A](l: List[A]): Option[A] = {
-    if (l.isEmpty) None else Some(l.last)
+    l.lastOption
   }
 
   def Head[T](default: T, l: List[T]): T = {
     if (l.isEmpty) default else l.head
   }
 
+  @tailrec
   def Last[T](l: List[T], default: T): T = {
     l match {
       case Nil => default
       case List(t) => t
-      case head :: next => Last(next, default)
+      case _ :: next => Last(next, default)
     }
   }
 
@@ -35,10 +38,11 @@ object ListUtils {
     }
   }
 
+  @tailrec
   def NthError[T](l: List[T], n: Int): Option[T] = {
     (n, l) match {
       case (0, head :: _) => Some(head)
-      case (n, _ :: next) if n > 0 => NthError(l, n)
+      case (n, _ :: _) if n > 0 => NthError(l, n)
       case _ => None
     }
   }
@@ -50,7 +54,7 @@ object ListUtils {
       case Nil => Nil
       case lh :: lt => lt match {
         case Nil => Nil
-        case th :: tt => (lh, th) :: PairConsecutive(lt)
+        case th :: _ => (lh, th) :: PairConsecutive(lt)
       }
     }
   }
@@ -60,7 +64,7 @@ object ListUtils {
       case Nil => Nil
       case lh :: lt => lt match {
         case Nil => Nil
-        case th :: tt => (lh, th, label) :: PairConsecutiveWithLabel(label, lt)
+        case th :: _ => (lh, th, label) :: PairConsecutiveWithLabel(label, lt)
       }
     }
   }
@@ -89,7 +93,7 @@ object ListUtils {
 
     if (l.length <= n) (l ::: List.fill(n - l.length)(None)).appended(Some(v))
     else {
-      val s = l.toSeq
+      val s = l
       s(n) match {
         case None => l.updated(n, Some(v))
         case Some(_) => l
@@ -102,7 +106,7 @@ object ListUtils {
     require(n >= 0)
 
     l match {
-      case head :: next => if (n > 0) head :: AppendToNth(next, n - 1, a) else (head.appended(a)) :: next
+      case head :: next => if (n > 0) head :: AppendToNth(next, n - 1, a) else head.appended(a) :: next
       case Nil => if (n > 0) List() :: AppendToNth(List(), n - 1, a) else List(List(a))
     }
   }
@@ -138,7 +142,7 @@ object CartesianUtils {
       * @param t list of tail lists
       * @return list of lists with `h` prepended to each list in `t`
       */
-    def prependOne[T](h: T, t: List[List[T]]): List[List[T]] = t.map( h :: _ )
+    def prependOne[A](h: A, t: List[List[A]]): List[List[A]] = t.map( h :: _ )
 
     /**
       * Given a list of head elements [h] and a list of tail lists [t],
@@ -149,7 +153,7 @@ object CartesianUtils {
       * @param t list of tail lists
       * @return list of lists with each element of `h` prepended to each list in `t`
       */
-    def prependList[T](h: List[T], t: List[List[T]]): List[List[T]] = {
+    def prependList[B](h: List[B], t: List[List[B]]): List[List[B]] = {
       h match {
         case head :: next => prependOne(head, t) ++ prependList(next, t)
         case Nil => Nil
@@ -166,7 +170,7 @@ object CartesianUtils {
   /* Cartesian Product of Two Lists as Pairs */
 
   def CartesianProductPairs[A, B](h: List[A], t: List[B]): List[(A, B)] = {
-    def helper[A, B](h: A, t: List[B]): List[(A, B)] = t.map((h, _))
+    def helper[C, D](h: C, t: List[D]): List[(C, D)] = t.map((h, _))
     h.map(helper(_, t)).foldLeft(List.empty[(A, B)])(_ ++ _)
   }
 }
@@ -175,12 +179,12 @@ class TinyTimer(name: String) {
   var start: Long = _
   var init = false
 
-  def reset = {
+  def reset(): Unit = {
     init = true
     start = System.nanoTime()
   }
 
-  override def toString(): String = {
+  override def toString: String = {
     val timeElapsed = (System.nanoTime() - start) / 1000000
     if (init) s"Timer<$name>: $timeElapsed ms" else "Error: not initialized"
   }
@@ -206,6 +210,7 @@ object GlobalGraphIDUtils {
   }
 
   def ungeid(p: Pipeline, n: Int): (Stages.Location, ProgramOrderIndex) = {
+    @tailrec
     def helper(p: Pipeline, n: Int, s: Int, e: Int): (Stages.Location, ProgramOrderIndex) = {
       if (s == p.stages.length) {
         if (n == 0) (0, e + 1) else helper(p, n - 1, 1, e + 1)
@@ -225,7 +230,7 @@ object Dot {
   private val middleColor = "#8dfbe4"
   private val finishColor = "#83e0d8"
 
-  val edgeColor = HashMap(
+  val edgeColor: Map[String, String] = HashMap(
     "ProgramOrder" -> "#ff0000", // Blue
     "IntraLocation" -> "#00cc00", // Green
     "IntraEvent" -> "#000000", // Black
@@ -269,21 +274,20 @@ object Dot {
 
   def GroupNodesByEvent(f: Int => (Int, Int), l: List[Int]): List[List[Int]] = {
     l match {
-      case head :: next => {
-        val (n, e) = f(head)
+      case head :: next =>
+        val (_, e) = f(head)
         ListUtils.AppendUniqueToNth(GroupNodesByEvent(f, next), e, head)
-      }
       case Nil => Nil
     }
   }
 
+  @tailrec
   def EdgeListToNodeList(l: List[(Int, Int, String)], f: Int => (Int, Int), rNodes: List[Int]): List[Int] = {
     l match {
-      case head :: next => {
+      case head :: next =>
         val (h1, h2) = (head._1, head._2)
         val _rNodes = ListUtils.AddUnique(ListUtils.AddUnique(rNodes, h1), h2)
         EdgeListToNodeList(next, f, _rNodes)
-      }
       case Nil => rNodes
     }
   }
@@ -320,6 +324,7 @@ object Dot {
   }
 
   def rankNodes(f: Int => Int, pMax: Int, l: List[Int]): (List[List[Int]], List[Int]) = {
+    @tailrec
     def helper(f: Int => Int, pMax: Int, l: List[Int], r1: List[List[Int]], r2: List[Int]): (List[List[Int]], List[Int]) = {
       l match {
         case head :: next => if (pMax <= f(head)) helper(f, pMax, next, r1, ListUtils.AddUnique(r2, head)) else helper(f, pMax, next, ListUtils.AppendToNth(r1, f(head), head), r2)
@@ -371,7 +376,7 @@ object Dot {
     */
   def DotGraph(name: String, lNormal: List[(Int, Int, String)], fStageEvent: Int => (Int, Int), fString: Int => String, lBold: List[Int], lThick: List[(Int, Int)], pMax: Int): String = {
     val ms = new TinyTimer("dot_graph")
-    ms.reset
+    ms.reset()
     val fStage: Int => Int = fStageEvent(_)._1
     val fEvent: Int => Int = fStageEvent(_)._2
     val lNodes = EdgeListToNodeList(lNormal, fStageEvent, Nil)
