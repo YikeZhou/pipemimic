@@ -4,5 +4,7 @@
 .metals/
 .vscode/
 .bloop/
+.bsp/
+.idea/
 
 out/
