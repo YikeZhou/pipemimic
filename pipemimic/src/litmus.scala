@@ -209,5 +209,5 @@ object Litmus {
     ))
   }
 
-  val AllLitmusTests: Seq[Pipeline => List[(String, String)]] = amd1 :: Nil
+  val AllLitmusTests: Seq[Pipeline => List[(String, String)]] = amd1 _ :: Nil
 }
