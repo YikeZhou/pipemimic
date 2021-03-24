@@ -140,6 +140,6 @@ class StagesTest extends AnyFlatSpec {
 
     def DummyScenario(e: Event): PathOption = PathOption("Dummy", e, List(1, 2), List.empty[PerformStages], NoSpecialEdges)
 
-    assert(EventsSortedByFirstLocation(events.map(DummyScenario(_))) == List(Nil, events))
+    assert(EventsSortedByFirstLocation(events.map(DummyScenario)) == List(Nil, events))
   }
 }
