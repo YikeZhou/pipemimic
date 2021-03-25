@@ -120,7 +120,6 @@ class StagesTest extends AnyFlatSpec {
     val sampleValidationExecution = GraphsToVerifyExecution("Sample", myPipeline, List(evt00, evt10), List((0, 1)))
     println(sampleValidationExecution) // EdgesExample5
 
-    /* FIXME ppo test */
     println("Start ppo checking")
     val WRRW = List(Direction.W, Direction.R, Direction.R, Direction.W)
 
