@@ -40,9 +40,10 @@ object ListUtils {
 
   @tailrec
   def NthError[T](l: List[T], n: Int): Option[T] = {
+    require(n >= 0)
     (n, l) match {
       case (0, head :: _) => Some(head)
-      case (n, _ :: _) if n > 0 => NthError(l, n)
+      case (n, _ :: next) => NthError(next, n - 1)
       case _ => None
     }
   }
