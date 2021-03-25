@@ -302,13 +302,24 @@ object Stages {
   /**
     * A [PerformStages] specifies the locations at which an instruction performs with respect to each core along its
     * path. [observability] refers to the situation in which a particular performing location is only visible to stores
-    * from certain cores.  For example, a read forwarded from the store buffer may perform with respect to all cores
+    * from certain cores.
+    * For example, a read forwarded from the store buffer may perform with respect to all cores
     * when it performs, but it can only observe stores from the same core in this situation.
-    * @param stage ??? FIXME descriptions below may be incomplete
-    * @param cores list of cores
-    * @param observability cores able to observe this performing
+    * ---
+    * Performing Location
+    * A location [stage] is a performing location with respect to core [c] if:
+    * - a load at location [stage] can read the value written by a store from core [c]
+    * - the data being written by a store at location [stage] is visible to core [c]
+    * ---
+    * Considering that every [PerformStages] is related to a given event [evt] in [PathOption], for [evt], each
+    * [PerformStages] records a location, where a core in [cores] can read the value stored by [evt] when [evt] passed
+    * this location. In the meantime, [evt] can read value written by stores from core in list [cores] at location
+    * [stage]. Thus, special case mentioned above means that, only the second condition is satisfied.
+    * @param stage same as locations
+    * @param cores list of cores with respect to which location [stage] is a performing location
+    * @param observability cores from which location [stage] can observe stores
     * @param cacheLineInvLoc invalid cache line
-    * @param isMainMemory if this is a main memory
+    * @param isMainMemory if this is a main memory FIXME not used by now
     */
   case class PerformStages(stage: Int, cores: List[Int], observability: List[Int],
                            cacheLineInvLoc: Option[Int], isMainMemory: Boolean)
@@ -321,7 +332,7 @@ object Stages {
     * @param optionName name of this case
     * @param evt corresponding event of this optional path
     * @param path list of locations
-    * @param performStages locations at which an event performs with respect to each core along its path
+    * @param performStages locations at which event [evt] performs with respect to other cores along its path
     * @param sem a special edge map
     */
   case class PathOption(optionName: String, evt: Event, path: Path,
