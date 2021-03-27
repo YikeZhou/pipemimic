@@ -1,0 +1,3 @@
+[submodule "litmus-tests-riscv"]
+	path = litmus-tests-riscv
+	url = https://github.com/litmus-tests/litmus-tests-riscv.git
