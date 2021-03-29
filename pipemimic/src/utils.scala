@@ -242,7 +242,8 @@ object Dot {
   )
 
   def EdgeColor(l1: Int, l2: Int, edgeString: String): String = {
-    val color = if (l1 == 0 && l2 == 0) edgeColor("ProgramOrder") else edgeColor.getOrElse(edgeString, "Other")
+    val color = if (l1 == 0 && l2 == 0) edgeColor("ProgramOrder") 
+      else edgeColor.getOrElse(edgeString, edgeColor("Other"))
     s"""color="$color""""
   }
 

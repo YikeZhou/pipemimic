@@ -123,6 +123,44 @@ object PreservedProgramOrder {
   /* Interface to verify ppo/po-loc */
 
   /**
+    * calculates the set of all possible Scenarios for a given Pipeline and given directions of Events in program
+    * order
+    * @param p pipeline
+    * @param po given program order
+    * @return all possible Scenarios
+    */
+  def AllScenariosForPOWithAnyAddress(p: Pipeline, po: List[Direction.Value]): List[(String, Scenario)] = {
+    /**
+      * Given a list of [Event]s, return a list of lists of [Event]s in which the [Location]s accessed by the [Event]s
+      * are replaced by each possible assignment of overlapping vs. non-overlapping [Location]s.
+      * For example, given a list of two [Event]s of directions [R] and [R], return the pair of lists (R 0, R 0) and
+      * (R 0, R 1), i.e., the overlapping case and the non-overlapping case. Scenarios with more than two events will
+      * have more than two possibilities.
+      * @param l list of events (without location/address info)
+      * @return all possible assignment of locations to events in l
+      */
+    def AllLocationCombos(l: List[Event]): List[List[Event]] = {
+      /**
+        * Replace the [Location] accessed by each [Event] in [le] with the [Location] in the corresponding position
+        * in [ll].
+        * @param le list of events need replacing their locations
+        * @param ll list of locations
+        * @return le with locations replaced by ll
+        */
+      def ReplaceLocs(le: List[Event], ll: List[Location]): List[Event] = {
+        le zip ll map {
+          case (Event(eiid, iiid, Access(d, _, v)), location) => Event(eiid, iiid, Access(d, location, v))
+        }
+      }
+      BellNumber(l.length).map(ReplaceLocs(l, _))
+    }
+
+    val programOrder = GenerateEventsFromDirections(po) /* add direction info */
+    val programOrders = AllLocationCombos(programOrder) /* add location info */
+    programOrders.flatMap(AllScenariosForPO(p, _))
+  }
+
+  /**
     * Given a pipeline and type of program order (Read-after-read, etc) along with indices of events, return
     * corresponding dot graph.
     * @param p structure of pipeline
@@ -144,43 +182,7 @@ object PreservedProgramOrder {
       */
     def VerifyPPOWithAnyAddresses(p: Pipeline, po: List[Direction.Value], e1: Int, e2: Int)
     : List[(String, MHBResult)] = {
-      /**
-        * calculates the set of all possible Scenarios for a given Pipeline and given directions of Events in program
-        * order
-        * @param p pipeline
-        * @param po given program order
-        * @return all possible Scenarios
-        */
-      def AllScenariosForPOWithAnyAddress(p: Pipeline, po: List[Direction.Value]): List[(String, Scenario)] = {
-        /**
-          * Given a list of [Event]s, return a list of lists of [Event]s in which the [Location]s accessed by the [Event]s
-          * are replaced by each possible assignment of overlapping vs. non-overlapping [Location]s.
-          * For example, given a list of two [Event]s of directions [R] and [R], return the pair of lists (R 0, R 0) and
-          * (R 0, R 1), i.e., the overlapping case and the non-overlapping case. Scenarios with more than two events will
-          * have more than two possibilities.
-          * @param l list of events (without location/address info)
-          * @return all possible assignment of locations to events in l
-          */
-        def AllLocationCombos(l: List[Event]): List[List[Event]] = {
-          /**
-            * Replace the [Location] accessed by each [Event] in [le] with the [Location] in the corresponding position
-            * in [ll].
-            * @param le list of events need replacing their locations
-            * @param ll list of locations
-            * @return le with locations replaced by ll
-            */
-          def ReplaceLocs(le: List[Event], ll: List[Location]): List[Event] = {
-            le zip ll map {
-              case (Event(eiid, iiid, Access(d, _, v)), location) => Event(eiid, iiid, Access(d, location, v))
-            }
-          }
-          BellNumber(l.length).map(ReplaceLocs(l, _))
-        }
 
-        val programOrder = GenerateEventsFromDirections(po) /* add direction info */
-        val programOrders = AllLocationCombos(programOrder) /* add location info */
-        programOrders.flatMap(AllScenariosForPO(p, _))
-      }
       /* generate all possible scenarios */
       val scenarios = AllScenariosForPOWithAnyAddress(p, po)
 
@@ -222,13 +224,17 @@ object PreservedProgramOrder {
             }
             val dirs = s.map(_.evt.dirn)
             (NthDefault(e1, dirs, Direction.W), NthDefault(e2, dirs, Direction.W)) match {
-              case (Direction.R, Direction.R) => GraphTreeOr(List(PPOMustHappenBeforeGlobalEvents(s, e1, e2)))
+              case (Direction.R, Direction.R) => GraphTreeOr(
+                // FIXME: Missing PPOSpeculativeLoadReorderEvents
+                List(PPOMustHappenBeforeGlobalEvents(s, e1, e2))
+              )
               case _ => PPOMustHappenBeforeGlobalEvents(s, e1, e2)
             }
           }
 
+          // FIXME: is this static edges? type: GlobalEvent
           val g = ScenarioEdges("PPO", p, s) /* defined in Stages, return all global edges in scenario s */
-          val v = PPOGlobalEvents(s, e1, e2) /* defined above,  */
+          val v = PPOGlobalEvents(s, e1, e2) /* defined above, assume to be edges need checking? */
           (g, v)
         }
 
@@ -256,6 +262,7 @@ object PreservedProgramOrder {
       }
 
       val scenarios = AllScenariosForPOWithSameAddress(p, po)
+
       def VerifyPPOLocalScenarios(l: List[(String, Scenario)], p: Pipeline, e1: Int, e2: Int): List[(String, MHBResult)] = {
         def GraphToVerifyPPOLocalScenario(p: Pipeline, s: Scenario, e1: Int, e2: Int): (GraphTree[GlobalEvent], GraphTree[GlobalEvent]) = {
 
@@ -279,12 +286,13 @@ object PreservedProgramOrder {
           val v = PPOLocalEvents(s, e1, e2)
           (g, v)
         }
-        l match {
-          case (title, h) :: t =>
-            val (g, v) = GraphToVerifyPPOLocalScenario(p, h, e1, e2)
-            VerifyPPOScenario(g, v, p).map(AddTitle(title, _)) ::: VerifyPPOLocalScenarios(t, p, e1, e2)
-          case Nil => Nil
+
+        val raw = l map {
+          case (str, scenario) =>
+            val (g, v) = GraphToVerifyPPOLocalScenario(p, scenario, e1, e2)
+            VerifyPPOScenario(g, v, p).map(AddTitle(str, _))
         }
+        raw.flatten
       }
       VerifyPPOLocalScenarios(scenarios, p, e1, e2)
     }

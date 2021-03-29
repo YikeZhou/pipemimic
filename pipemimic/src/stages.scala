@@ -252,9 +252,9 @@ object Stages {
   def GlobalEventString(p: Pipeline, ge: GlobalEvent): String = {
     val (n, e) = ge
     (NthError(p.stages, n), n - p.stages.length) match {
-      case (Some(s), _) => s"Event $e at ${s.name}"
-      case (None, 0) => s"CacheLine $e Create"
-      case (None, 1) => s"CacheLine $e Invalidate"
+      case (Some(s), _) => s"Event${e}at${s.name}"
+      case (None, 0) => s"CacheLine${e}Create"
+      case (None, 1) => s"CacheLine${e}Invalidate"
       case _ => "Unknown"
     }
   }

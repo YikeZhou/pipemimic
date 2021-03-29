@@ -4,6 +4,8 @@ import pipemimic.PreservedProgramOrder.GraphsToVerifyTSOPPO
 import pipemimic.Stages.{GlobalGraph, LocalReordering, PathOption, PathOptions, PerformStages, Pipeline, SpecialEdgeMap, Stage}
 import java.io._
 
+import org.scalatest.flatspec.AnyFlatSpec
+
 object RISCTest {
   val FIFO: LocalReordering = _ => ordering => ordering
 
@@ -78,10 +80,21 @@ object RISCTest {
   def RISCPipeline(n: Int): Pipeline = Pipeline("RISC", RISCAllStages(n), RISCPathOptions(n, _))
 }
 
-object PrintGraph extends App {
-  val AllPPOGraphs = GraphsToVerifyTSOPPO(RISCTest.RISCPipeline(1))
-//  println(AllPPOGraphs)
-  val writer = new PrintWriter(new File("RISCGraphs"))
-  writer.write(AllPPOGraphs.map(s => "\n" + s._2).mkString("\n"))
-  writer.close()
+class RISCTest extends AnyFlatSpec {
+  "it" should "print all graphs" in {
+    val allPPOGraphs = GraphsToVerifyTSOPPO(RISCTest.RISCPipeline(1))
+    println(s"found ${allPPOGraphs.length} ppo graphs")
+    val allLitmusTestGraphs = Litmus.AllLitmusTests.map(t => t (RISCTest.RISCPipeline(4)))
+    println(s"found ${allLitmusTestGraphs.length} litmus test graphs")
+    val allGraphs = allPPOGraphs ++ allLitmusTestGraphs.flatten
+
+    val dots = allGraphs.map(_._2)
+    val names = allGraphs.map(_._1.filter(_.isLetterOrDigit))
+    dots zip names map {
+      case (str, i) =>
+        val writer = new PrintWriter(new File(s"./graphs/$i.gv"))
+        writer.write(str)
+        writer.close()
+    }
+  }
 }

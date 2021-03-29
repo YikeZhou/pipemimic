@@ -18,6 +18,7 @@ class DotTest extends AnyFlatSpec {
     val e1 = Event(1, Iiid(0, 1), Access(Direction.R, 1, 0))
 
     val myGraph = List(
+      /* GlobalEvent */
       ((0, e0), (0, e1), "a"),
       ((0, e0), (1, e0), "b")
     )
@@ -42,6 +43,7 @@ class DotTest extends AnyFlatSpec {
     def myGepid(nep: ((Int, Event), (Int, Event), String)): (Int, Int, String) = {
       val (ne1, ne2) = (nep._1, nep._2)
       (myGeid(ne1), myGeid(ne2), nep._3)
+      /* Hint: use gepid to convert GraphTree[GlobalEvent] to GraphTree[Int] */
     }
 
     def myUngeid(g: Int): (Int, Int) = {

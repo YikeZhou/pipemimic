@@ -152,7 +152,8 @@ object Litmus {
       * @param events list of event
       * @return legal execution or forbidden cases
       */
-    def GenerateCandidatesThenVerify(name: String, expected: LitmusTestResult.Value, p: Pipeline, events: List[Event]): (Boolean, Int, List[(String, String)]) = {
+    def GenerateCandidatesThenVerify(name: String, expected: LitmusTestResult.Value, p: Pipeline, events: List[Event])
+    : (Boolean, Int, List[(String, String)]) = {
       def StringOfRFCandidates(rf: List[List[(Option[Event], Event)]]): String = {
         def stringHelper(rf: List[(Option[Event], Event)]): String = {
           rf match {
