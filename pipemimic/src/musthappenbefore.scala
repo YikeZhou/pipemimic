@@ -29,6 +29,7 @@ object MustHappenBefore {
   }
 
   def TreeMustHappenBeforeInAllGraphs(g: GraphTree[Int], v: GraphTree[Int]): List[(String, MHBResult)] = {
+
     @tailrec
     def boolPair(g: List[(Int, Int, String)], lsd: List[(Int, Int, String)], lr: List[MHBResult], b: Boolean): (Boolean, List[MHBResult]) = {
       lsd match {
@@ -47,9 +48,11 @@ object MustHappenBefore {
     def stringPair(n: String, g: List[(Int, Int, String)], lv: List[(String, List[(Int, Int, String)])], lr: List[(String, MHBResult)]): List[(String, MHBResult)] = {
       lv match {
         case (hn, hv) :: next =>
-          val (b, r) = boolPair(g, hv, Nil, b = true)
+          val (b, r) = boolPair(g, hv, Nil, b = true) /* lv: result of DNFOfTree */
           val _r = r.map((s"$n:$hn", _))
-          if (b) _r else stringPair(n, g, next, lr ::: _r)
+          /* It seems that edges in lv should appear in every graph in g,
+          * but here only check for existence in g */
+          if (b) /* success */ _r else /* check next one */ stringPair(n, g, next, lr ::: _r)
         case Nil => lr
       }
     }
@@ -73,7 +76,7 @@ object MustHappenBefore {
         val r = VerifyMustHappenBeforeInGraph(g, (0, 0))
         r match {
           case Cyclic(_, _) => (r, false)
-          case _ => (r, true)
+          case _ => (r, true) /* can happen */
         }
       }
 

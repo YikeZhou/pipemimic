@@ -6,6 +6,8 @@ import java.io._
 
 import org.scalatest.flatspec.AnyFlatSpec
 
+import scala.annotation.tailrec
+
 object RISCTest {
   val FIFO: LocalReordering = _ => ordering => ordering
 
@@ -13,6 +15,7 @@ object RISCTest {
 
   val NoSpecialEdges: SpecialEdgeMap = _ => _ => _ => Nil
 
+  @tailrec
   def StoreBufferSpecialEdges(c: Int, n: Int)(eventBefore: List[Event])(e: Event)(eventAfter: List[Event]): GlobalGraph = {
     eventAfter match {
       case h :: t => h.dirn match {

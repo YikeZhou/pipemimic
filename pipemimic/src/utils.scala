@@ -202,7 +202,7 @@ object GlobalGraphIDUtils {
     (geid(p, gep._1), geid(p, gep._2), gep._3)
   }
 
-  def getid(p: Pipeline, t: GraphTree[GlobalEvent]): GraphTree[Int] = {
+  def getid(p: Pipeline, t: GraphTree[GlobalEvent]): GraphTree[Int] = { // TODO: Pipeline => pipeline.stages.length
     t match {
       case GraphTreeOr(l) => GraphTreeOr(l.map(getid(p, _)))
       case GraphTreeAnd(l) => GraphTreeAnd(l.map(getid(p, _)))

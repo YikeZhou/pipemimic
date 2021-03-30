@@ -217,7 +217,7 @@ object PreservedProgramOrder {
                     case Some(PerformStages(_, cores, _, _, _)) => cores
                     case _ => Nil
                   }
-                  val remoteCores = allCores.filterNot(_ == localCore)
+                  val remoteCores = allCores.filterNot(_ == localCore) /* no remote cores here? */
                   GraphTreeLeaf("PPO", PerfWRTiBeforePerfWRTj(po1, po2, localCore, remoteCores))
                 case _ => GraphTree.GraphTreeEmptyLeaf[GlobalEvent]
               }

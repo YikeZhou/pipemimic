@@ -57,7 +57,7 @@ object Litmus {
         }
       }
       case Nil => r.action match {
-        // FIXME why value must be 0 ? what's the meaning of read's value ?
+        // FIXME why value must be 0 ? what's the meaning of read's value ? => initial value
         case Access(Direction.R, _, 0) => List((None, r))
         case _ => Nil
       }

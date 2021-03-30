@@ -304,10 +304,10 @@ object Execution {
     * @return list of events
     */
   def ReadsFromInitial(events: List[Event], rfFromWrite: List[(Eiid, Eiid)]): List[Eiid] = {
-    val edgeDests = rfFromWrite.map(_._2)
+    val edgeDests = rfFromWrite.map(_._2) /* read event */
     events match {
       case head :: next => (edgeDests.contains(head.eiid), head.dirn) match {
-        case (false, Direction.R) => head.eiid :: ReadsFromInitial(next, rfFromWrite)
+        case (false, Direction.R) => /* head: read event from init */ head.eiid :: ReadsFromInitial(next, rfFromWrite)
         case _ => ReadsFromInitial(next, rfFromWrite)
       }
       case Nil => Nil

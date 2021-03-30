@@ -26,4 +26,4 @@ clean:
 graph: $(pngs)
 
 $(pngs): $(graphs)
-	dot $(patsubst %.png, %.gv, $@) -Tpng -o $@
+	dot $(patsubst %.png,%.gv,$@) -Tpng -o $@
