@@ -16,7 +16,8 @@ object Adjacency {
 
   /* Dijkstra's algorithm */
   
-  def DijkstraStep(g: AdjacencyList, src: Int, queue: List[Int], prevs: List[Option[Int]], v: Int): (List[Int], List[Option[Int]]) = {
+  private def DijkstraStep(g: AdjacencyList, src: Int, queue: List[Int], prevs: List[Option[Int]], v: Int): (List[Int],
+    List[Option[Int]]) = {
     require(v >= 0)
     val adjacentNodes = if (v < g.length) g(v) else List.empty[Int]
     if (adjacentNodes.contains(src)) {

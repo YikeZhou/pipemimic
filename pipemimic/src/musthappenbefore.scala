@@ -2,7 +2,6 @@ package pipemimic
 
 import TopologicalSort.TopSort
 import Adjacency.{Dijkstra, PathBacktrace}
-import GraphTree.DNFOfTree
 
 import scala.annotation.tailrec
 
@@ -13,7 +12,7 @@ case class MustHappenBefore(g: List[(Int, Int, String)], l: List[Int]) extends M
 case class Cyclic(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult
 
 object MustHappenBefore {
-  def VerifyMustHappenBeforeInGraph(g: List[(Int, Int, String)], sd: (Int, Int)): MHBResult = {
+   private def VerifyMustHappenBeforeInGraph(g: List[(Int, Int, String)], sd: (Int, Int)): MHBResult = {
     val (src, dst) = sd
     val _g = g.map(node => (node._1, node._2))
     TopSort(_g) match {
@@ -64,7 +63,7 @@ object MustHappenBefore {
       }
     }
 
-    helper(DNFOfTree(g), DNFOfTree(v))
+    helper(g.flatten, v.flatten)
   }
 
   def TreeAcyclicInSomeGraph(g: GraphTree[Int]): (List[(String, MHBResult)], Boolean, Int) = {
@@ -88,7 +87,7 @@ object MustHappenBefore {
       }
     }
 
-    val d = DNFOfTree(g)
+    val d = g.flatten
     val r = helper(d, Nil)
     (r._1, r._2, d.length)
   }

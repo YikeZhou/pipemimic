@@ -19,7 +19,7 @@ class StaticGraphTest extends AnyFlatSpec {
         val se = ScenarioEdges("PPO", p, s._2)
         println(se)
         val raw = getid(p, se)
-        val gs = DNFOfTree(raw)
+        val gs = raw.flatten
         println(s"found ${gs.length} trees")
         val dots: List[String] = gs.zipWithIndex map {
           case (g, i) => Dot.DotGraph(s"Case $i: ${g._1}", g._2, ungeid(p, _), _.toString, Nil, Nil, p.stages.length)
@@ -39,7 +39,7 @@ class StaticGraphTest extends AnyFlatSpec {
     val graph = ScenarioEdges("PPO", pipeline, s._2) /* static edges ? */
     println(graph)
     val raw = getid(pipeline, graph)
-    val g = DNFOfTree(raw)
+    val g = raw.flatten
     assert(g.length == 1)
     val finalGraph = g.head
     val dot = Dot.DotGraph("Test case 1", finalGraph._2, ungeid(pipeline, _), 

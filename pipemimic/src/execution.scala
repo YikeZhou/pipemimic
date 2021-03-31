@@ -4,7 +4,6 @@ import pipemimic.Adjacency.Dijkstra
 import pipemimic.CartesianUtils._
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils._
-import pipemimic.GraphTree.{DNFOfTree, DNFStringOfTree, TreeOfDNF}
 import pipemimic.Interleavings.Interleave
 import pipemimic.MustHappenBefore._
 import pipemimic.Stages._
@@ -181,7 +180,7 @@ object Execution {
       val s = (ls, es)
       val d = (ld, ed)
       val l = List((s, d, "FRi"))
-      def PrintPossibility: GraphTree[GlobalEvent] => String = t => DNFStringOfTree(GlobalEventString(p, _), t) + '\n'
+      def PrintPossibility: GraphTree[GlobalEvent] => String = t => t.toString(GlobalEventString(p, _)) + '\n'
       GraphTreeLeaf(ExecutionEdgeLabel("fr", l), l)
     }
 
@@ -238,7 +237,7 @@ object Execution {
       }
     }
 
-    TreeOfDNF(DNFOfTree(gUhb).map(_helper(p, s, w, r, _)))
+    GraphTree(gUhb.flatten.map(_helper(p, s, w, r, _)))
   }
 
   /**
@@ -269,7 +268,7 @@ object Execution {
       val src = (ls, es)
       val dst = (ld, ed)
       val l = List((src, dst, "RF"))
-      def PrintPossibility: GraphTree[GlobalEvent] => String = t => DNFStringOfTree(GlobalEventString(p, _), t) + '\n'
+      def PrintPossibility: GraphTree[GlobalEvent] => String = t => t.toString(GlobalEventString(p, _)) + '\n'
       println(PrintPossibility(GraphTreeLeaf("rf_uhb", l)))
       GraphTreeAnd(List(
         ExecutionOrderEdges_FR_fromwrite(p, s, src, dst, gUhb),

@@ -9,112 +9,90 @@ import CartesianUtils.CartesianProduct
   * represent them as G + {e1 or e2}.
   * The motivation for a GraphTree is to more easily represent the case in which, for example, a litmus test outcome may
   * be observable in any one of a number of possible graphs, some of which will generally look very similar.
-  * @tparam T type of tree nodes
+  * @tparam A type of tree nodes
   */
-abstract class GraphTree[T]
+sealed abstract class GraphTree[A] {
+  def map[B](f: (A, A, String) => (B, B, String)): GraphTree[B]
 
-case class GraphTreeOr[T](l: List[GraphTree[T]]) extends GraphTree[T] // FIXME so where do we put e1 or e2?
-case class GraphTreeAnd[T](l: List[GraphTree[T]]) extends GraphTree[T]
-case class GraphTreeLeaf[T](s: String, l: List[(T, T, String)]) extends GraphTree[T]
-
-object GraphTree {
-  def GraphTreeEmptyLeaf[T]: GraphTreeLeaf[T] = GraphTreeLeaf("", List.empty[(T, T, String)])
+  def map[B](f: A => B): GraphTree[B] = map((s, d, str) => (f(s), f(d), str))
 
   /**
-    * The DNFOfTree of a GraphTree is an explicit list of the graphs represented by the tree, i.e., no longer in the
-    * compacted GraphTree format.
-    * @param t GraphTree
-    * @tparam T type of graph nodes
-    * @return list of graphs (String: name, list (t, t): edges in one graph)
+    * An explicit list of the graphs represented by the tree, i.e., no longer in the compacted GraphTree format.
+    * @return list of graphs represented by the tree
     */
-  def DNFOfTree[T](t: GraphTree[T]): List[(String, List[(T, T, String)])] = {
+  def flatten: List[(String, List[(A, A, String)])]
+
+  def toString(printNode: A => String): String
+}
+
+case class GraphTreeOr[A](l: List[GraphTree[A]]) extends GraphTree[A] {
+  override def map[B](f: (A, A, String) => (B, B, String)): GraphTree[B] = GraphTreeOr(l.map(_.map(f)))
+
+  override def flatten: List[(String, List[(A, A, String)])] = l.flatMap(_.flatten)
+
+  override def toString(printNode: A => String): String = s"Or(${l.map(_.toString(printNode)).mkString})"
+}
+
+case class GraphTreeAnd[A](l: List[GraphTree[A]]) extends GraphTree[A] {
+  override def map[B](f: (A, A, String) => (B, B, String)): GraphTree[B] = GraphTreeAnd(l.map(_.map(f)))
+
+  override def flatten: List[(String, List[(A, A, String)])] = {
     /**
       * Simply concat two strings and lists
-      * FIXME so a graph is a GraphTree Leaf ?
       * @param a former graph
       * @param b latter graph
-      * @return (a.name ++ b.name, a.list ::: b.list)
+      * @return (a.name + b.name, a.list ::: b.list)
       */
-    def joinGraphs(a: (String, List[(T, T, String)]), b: (String, List[(T, T, String)])): (String, List[(T, T, String)]) = {
+    def joinGraphs(a: (String, List[(A, A, String)]), b: (String, List[(A, A, String)])): (String, List[(A, A,
+      String)]) = {
       a match { case (an, al) => b match { case (bn, bl) => (an + bn, al ::: bl) } }
     }
-    t match {
-      case GraphTreeOr(l) => l.flatMap(DNFOfTree[T]) /* every element in l is a graph */
-      case GraphTreeAnd(l) => /* first calculate each branch - List(List(g1, g2), List(g3, g4)) */
-        val _l: List[List[(String, List[(T, T, String)])]] = l.map(DNFOfTree)
-        /* cartesian product yields every combination of graph edge set, then fold list of set into list of edges */
-        CartesianProduct(_l).map(_.foldLeft(("", List.empty[(T, T, String)]))((h, n) => joinGraphs(h, n)))
-      case GraphTreeLeaf(s, l) => List((s, l)) /* a leaf represents one graph */
-    }
+    CartesianProduct(l.map(_.flatten)).map(_.foldLeft("", List.empty[(A, A, String)])(joinGraphs))
   }
 
-  /**
-    * GraphTreeSimplify tries to represent a GraphTree in a simpler but equivalent form.
-    * It doesn't guarantee minimality.
-    * @param g a GraphTree
-    * @tparam T type of graph nodes
-    * @return simplified GraphTree
-    */
-  def GraphTreeSimplify[T](g: GraphTree[T]): GraphTree[T] = {
-    g match {
-      case GraphTreeOr(List(x)) => GraphTreeSimplify(x)
-      case GraphTreeOr(l) => GraphTreeOr(l.map(GraphTreeSimplify))
-      case GraphTreeAnd(List(x)) => GraphTreeSimplify(x)
-      case GraphTreeAnd(l) => GraphTreeAnd(l.map(GraphTreeSimplify))
-      case _ => g
-    }
+  override def toString(printNode: A => String): String = s"And(${l.map(_.toString(printNode)).mkString})"
+}
+
+case class GraphTreeLeaf[A](s: String, l: List[(A, A, String)]) extends GraphTree[A] {
+  override def map[B](f: (A, A, String) => (B, B, String)): GraphTree[B] = GraphTreeLeaf(s, l map {
+    case (s, d, str) => f(s, d, str)
+  })
+
+  override def flatten: List[(String, List[(A, A, String)])] = (s, l) :: Nil
+
+  override def toString(printNode: A => String): String = l.map {
+    case (a, b, label) => s"${printNode(a)}-$label->${printNode(b)}"
+  } match {
+    case Nil => "<empty leaf>"
+    case leaves => leaves.mkString(s + "(", ",", ")")
   }
+}
+
+object GraphTree {
+  def GraphTreeEmptyLeaf[A]: GraphTreeLeaf[A] = GraphTreeLeaf("", List.empty[(A, A, String)])
 
   /**
     * converts a list of graphs into GraphTree representation.
     * @param l list of graphs
-    * @tparam T type of graph nodes
+    * @tparam A type of graph nodes
     * @return GraphTree
     */
-  def TreeOfDNF[T](l: List[(String, List[(T, T, String)])]): GraphTree[T] = {
-    GraphTreeSimplify(GraphTreeOr(l.map(x => GraphTreeLeaf(x._1, x._2))))
-  }
-
-  /**
-    * convert GraphTree to string
-    * @param print_node node formatter
-    * @param t tree
-    * @tparam T type of node
-    * @return formatted string represents given GraphTree
-    */
-  def DNFStringOfTree[T](print_node: T => String, t: GraphTree[T]): String = {
+  def apply[A](l: List[(String, List[(A, A, String)])]): GraphTree[A] = {
     /**
-      * print one edge
-      * @param print_node convert edge to string
-      * @param e edge
-      * @tparam A type of node
-      * @return string represent one edge
+      * GraphTreeSimplify tries to represent a GraphTree in a simpler but equivalent form.
+      * It doesn't guarantee minimality.
+      * @param g a GraphTree
+      * @return simplified GraphTree
       */
-    def helper[A](print_node: A => String, e: (A, A, String)): String = {
-      e match {
-        case (s, d, label) => s": ${print_node(s)}-$label->${print_node(d)} "
+    def GraphTreeSimplify(g: GraphTree[A]): GraphTree[A] = {
+      g match {
+        case GraphTreeOr(List(x)) => GraphTreeSimplify(x)
+        case GraphTreeOr(l) => GraphTreeOr(l.map(GraphTreeSimplify))
+        case GraphTreeAnd(List(x)) => GraphTreeSimplify(x)
+        case GraphTreeAnd(l) => GraphTreeAnd(l.map(GraphTreeSimplify))
+        case _ => g
       }
     }
-    t match {
-      case GraphTreeOr(l) => s"Or(${l.map(DNFStringOfTree(print_node, _)).mkString})"
-      case GraphTreeAnd(l) => s"And(${l.map(DNFStringOfTree(print_node, _)).mkString})"
-      case GraphTreeLeaf(s, l) => l.map(helper(print_node, _)).mkString(s, "", "")
-    }
-  }
-
-  def GraphTreeMap[A, B](f: A => B, g: GraphTree[A]): GraphTree[B] = {
-    g match {
-      case GraphTreeAnd(l) => GraphTreeAnd(l.map(GraphTreeMap(f, _)))
-      case GraphTreeOr(l) => GraphTreeOr(l.map(GraphTreeMap(f, _)))
-      case GraphTreeLeaf(s, l) => GraphTreeLeaf(s, l.map(x => (f(x._1), f(x._2), x._3)))
-    }
-  }
-
-  def GraphTreeMapPair[A, B](f: ((A, A, String)) => (B, B, String), g: GraphTree[A]): GraphTree[B] = {
-    g match {
-      case GraphTreeAnd(l) => GraphTreeAnd(l.map(GraphTreeMapPair(f, _)))
-      case GraphTreeOr(l) => GraphTreeOr(l.map(GraphTreeMapPair(f, _)))
-      case GraphTreeLeaf(s, l) => GraphTreeLeaf(s, l.map(f))
-    }
+    GraphTreeSimplify(GraphTreeOr(l.map { case (str, value) => GraphTreeLeaf(str, value) }))
   }
 }
