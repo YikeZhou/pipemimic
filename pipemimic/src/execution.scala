@@ -139,9 +139,9 @@ object Execution {
     }
   }
 
-  def VertexHasSameAddress(s: Scenario, l: Location, e: GlobalEvent): Boolean = {
+  def VertexHasSameAddress(s: Scenario, addr: Address, e: GlobalEvent): Boolean = {
     s.lift(e._2) match {
-      case Some(po) => po.evt.loc == l
+      case Some(po) => po.evt.loc == addr
       case None => false
     }
   }
@@ -160,8 +160,8 @@ object Execution {
     }
   }
 
-  def WritesToSameLocation(l: Location, s: Scenario): List[PathOption] = {
-    s.filter(x => if (x.evt.dirn == Direction.R) false else l == x.evt.loc)
+  def WritesToSameLocation(addr: Address, s: Scenario): List[PathOption] = {
+    s.filter(x => if (x.evt.dirn == Direction.R) false else addr == x.evt.loc)
   }
 
   def ExecutionEdgeLabel(n: String, l: List[(GlobalEvent, GlobalEvent, String)]): String = {

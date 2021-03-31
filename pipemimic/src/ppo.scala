@@ -146,7 +146,7 @@ object PreservedProgramOrder {
         * @param ll list of locations
         * @return le with locations replaced by ll
         */
-      def ReplaceLocs(le: List[Event], ll: List[Location]): List[Event] = {
+      def ReplaceLocs(le: List[Event], ll: List[Address]): List[Event] = {
         le zip ll map {
           case (Event(eiid, iiid, Access(d, _, v)), location) => Event(eiid, iiid, Access(d, location, v))
         }

@@ -16,10 +16,8 @@ package object pipemimic {
     val R, W = Value /* read or write */
   }
 
-  type Location = Address /* a memory location is specified by an address */
-
   abstract class Action /* an access specified by polarity + location + value */
-  case class Access(d: Direction.Value, l: Location, v: Value) extends Action
+  case class Access(d: Direction.Value, l: Address, v: Value) extends Action
 
   /**
     * Each instance of an instruction in a program execution may
@@ -38,7 +36,7 @@ package object pipemimic {
       }
     }
 
-    def loc: Location = {
+    def loc: Address = {
       this.action match {
         case Access(_, l, _) => l
       }
