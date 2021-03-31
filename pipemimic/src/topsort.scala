@@ -4,7 +4,7 @@ import Adjacency.{AdjacencyList, AdjacencyListFromEdges, FindPathAdj}
 
 import scala.annotation.tailrec
 
-abstract class TopSortResult
+sealed abstract class TopSortResult
 
 case class TotalOrdering(l: List[Int]) extends TopSortResult
 case class CycleFound(l: List[Int]) extends TopSortResult

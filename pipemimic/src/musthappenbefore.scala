@@ -5,7 +5,7 @@ import Adjacency.{Dijkstra, PathBacktrace}
 
 import scala.annotation.tailrec
 
-abstract class MHBResult
+sealed abstract class MHBResult
 
 case class Unverified(g: List[(Int, Int, String)], a: Int, b: Int) extends MHBResult
 case class MustHappenBefore(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult

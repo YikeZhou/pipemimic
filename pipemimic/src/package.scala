@@ -16,7 +16,7 @@ package object pipemimic {
     val R, W = Value /* read or write */
   }
 
-  abstract class Action /* an access specified by polarity + location + value */
+  sealed abstract class Action /* an access specified by polarity + location + value */
   case class Access(d: Direction.Value, l: Address, v: Value) extends Action
 
   /**
