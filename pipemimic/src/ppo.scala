@@ -1,12 +1,11 @@
 package pipemimic
 
-import Stages.{GlobalEvent, GlobalEventString, PathOption, PerformStages, Pipeline, Scenario, ScenarioEdges}
-import ListUtils.{LastError, NthDefault, NthError, PairConsecutive}
-import MustHappenBefore.TreeMustHappenBeforeInAllGraphs
-import GlobalGraphIDUtils.{getid, ungeid}
-import Bell.BellNumber
-import CartesianUtils.CartesianProduct
-import Dot.DotGraph
+import pipemimic.Bell.BellNumber
+import pipemimic.CartesianUtils.CartesianProduct
+import pipemimic.Dot.DotGraph
+import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
+import pipemimic.MustHappenBefore.TreeMustHappenBeforeInAllGraphs
+import pipemimic.Stages._
 
 import scala.annotation.tailrec
 
@@ -110,12 +109,12 @@ object PreservedProgramOrder {
       r match {
         case MustHappenBefore(g, l) =>
           DotGraph(s"PPO Verified: ${p.pipeName}: $t", g, ungeid(p, _), f, l,
-            PairConsecutive(l), p.stages.length)
+            l.pairConsecutive, p.stages.length)
         case Unverified(g, s, d) =>
           DotGraph(s"PPO Unverified! ${p.pipeName}: $t", g, ungeid(p, _), f, List(s, d), Nil, p.stages.length)
         case Cyclic(g, l) =>
           DotGraph(s"PPO Ruled out (cyclic): ${p.pipeName}: $t", g, ungeid(p, _), f, l,
-            PairConsecutive(l), p.stages.length)
+            l.pairConsecutive, p.stages.length)
       }
     )
   }
@@ -209,11 +208,11 @@ object PreservedProgramOrder {
 
           def PPOGlobalEvents(s: Scenario, e1: Int, e2: Int): GraphTree[GlobalEvent] = {
             def PPOMustHappenBeforeGlobalEvents(s: Scenario, e1: Int, e2: Int): GraphTree[GlobalEvent] = {
-              (NthError(s, e1), NthError(s, e2)) match {
+              (s.lift(e1), s.lift(e2)) match {
                 case (Some(po1), Some(po2)) =>
                   val localCore = po1.evt.iiid.proc
                   val ps1 = po1.performStages
-                  val allCores = LastError(ps1) match {
+                  val allCores = ps1.lastOption match {
                     case Some(PerformStages(_, cores, _, _, _)) => cores
                     case _ => Nil
                   }
@@ -223,7 +222,7 @@ object PreservedProgramOrder {
               }
             }
             val dirs = s.map(_.evt.dirn)
-            (NthDefault(e1, dirs, Direction.W), NthDefault(e2, dirs, Direction.W)) match {
+            (dirs.nthDefault(e1, Direction.W), dirs.nthDefault(e2, Direction.W)) match {
               case (Direction.R, Direction.R) => GraphTreeOr(
                 // FIXME: Missing PPOSpeculativeLoadReorderEvents
                 List(PPOMustHappenBeforeGlobalEvents(s, e1, e2))
@@ -268,7 +267,7 @@ object PreservedProgramOrder {
 
           def PPOLocalEvents(s: Scenario, e1: Int, e2: Int): GraphTree[GlobalEvent] = {
             def PPOMustHappenBeforeLocalEvents(s: Scenario, e1: Int, e2: Int): GraphTree[GlobalEvent] = {
-              (NthError(s, e1), NthError(s, e2)) match {
+              (s.lift(e1), s.lift(e2)) match {
                 case (Some(po1), Some(po2)) =>
                   val localCore = po1.evt.iiid.proc
                   GraphTreeLeaf("PPO", PerfWRTiBeforePerfWRTj(po1, po2, localCore, List(localCore)))
@@ -276,7 +275,7 @@ object PreservedProgramOrder {
               }
             }
             val dirs = s.map(_.evt.dirn)
-            (NthDefault(e1, dirs, Direction.W), NthDefault(e2, dirs, Direction.W)) match {
+            (dirs.nthDefault(e1, Direction.W), dirs.nthDefault(e2, Direction.W)) match {
               case (Direction.R, Direction.R) => GraphTreeOr(List(PPOMustHappenBeforeLocalEvents(s, e1, e2)))
               case _ => PPOMustHappenBeforeLocalEvents(s, e1, e2)
             }

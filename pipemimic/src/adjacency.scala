@@ -1,7 +1,5 @@
 package pipemimic
 
-import ListUtils._
-
 import scala.annotation.tailrec
 
 object Adjacency {
@@ -11,7 +9,7 @@ object Adjacency {
 
   def AdjacencyListFromEdges(l: List[(Int, Int)]): AdjacencyList = {
     l match {
-      case head :: next => AppendToNth(AdjacencyListFromEdges(next), head._1, head._2)
+      case head :: next => AdjacencyListFromEdges(next).appendToNth(head._1, head._2)
       case Nil => Nil
     }
   }
@@ -23,11 +21,11 @@ object Adjacency {
     val adjacentNodes = if (v < g.length) g(v) else List.empty[Int]
     if (adjacentNodes.contains(src)) {
       /* cyclic - stop here */
-      (List.empty[Int], replaceNthIfNone(prevs, src, v))
+      (List.empty[Int], prevs.replaceNthIfNone(src, v))
     } else {
-      val f_fold = (l: List[Option[Int]], i: Int) => replaceNthIfNone(l, i, v)
+      val f_fold = (l: List[Option[Int]], i: Int) => l.replaceNthIfNone(i, v)
       (
-        adjacentNodes.foldLeft(queue)((l, i) => AddUnique(l, i)),
+        adjacentNodes.foldLeft(queue)((l, i) => l.addUnique(i)),
         adjacentNodes.foldLeft(prevs)(f_fold)
       )
     }
@@ -45,19 +43,19 @@ object Adjacency {
           case Nil => (reachable, prevs)
           case head :: _ =>
             val temp = DijkstraStep(g, src, queue, prevs, head)
-            helper(unroll - 1, g, src, Tail(temp._1), AddUnique(reachable, head), temp._2)
+            helper(unroll - 1, g, src, temp._1.tailError, reachable.addUnique(head), temp._2)
         }
       }
     }
 
-    val max_iters = g.map(_.length).foldLeft(g.length)(_ + _)
+    val max_iters = g.map(_.length).sum + g.length
     val r_prevs = helper(max_iters, g, src, List(src), List.empty, List.empty)
     val r = r_prevs._1
     val prevs = r_prevs._2
     val nth_prevs = if (src < prevs.length) prevs(src) else None
     nth_prevs match {
       case Some(_) => (r, prevs)
-      case None => (Tail(r), prevs)
+      case None => (r.tailError, prevs)
     }
   }
 

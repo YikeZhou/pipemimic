@@ -46,4 +46,40 @@ package object pipemimic {
 
     def isWrite: Boolean = this.dirn == Direction.W
   }
+
+  /** list methods FIXME: keep this as simple as possible */
+  implicit class ListImprovements[A](val l: List[A]) {
+    def tailError: List[A] = if (l.isEmpty) l else l.tail
+    def nthDefault(n: Int, default: A): A = l.lift(n).getOrElse(default)
+    def pairConsecutive: List[(A, A)] = l.init zip l.tail
+    def pairConsecutive(label: String): List[(A, A, String)] = l.pairConsecutive.map(t => (t._1, t._2, label))
+    def addUnique(n: A): List[A] = if (l.contains(n)) l else l.appended(n)
+    def replaceNth(n: Int, v: A, d: A): List[A] =
+      if (l.length <= n) List.concat(l, List.fill(n - l.length)(d).appended(v)) else l.updated(n, v)
+  }
+
+  implicit class OptionListImprovements[A](val l: List[Option[A]]) {
+    def replaceNthIfNone(n: Int, v: A): List[Option[A]] = {
+      if (l.length <= n)
+        List.concat(l, List.fill(n - l.length)(None), List(Some(v)))
+      else if (l(n).isEmpty)
+        l.updated(n, Some(v))
+      else
+        l
+    }
+  }
+
+  implicit class TwoDimensionalListImprovements[A](val l: List[List[A]]) {
+    def appendToNth(n: Int, a: A, isUnique: Boolean = false): List[List[A]] = {
+      if (l.length <= n)
+        List.concat(l, List.fill(n - l.length)(List.empty), List(List(a)))
+      else {
+        l.zipWithIndex map {
+          case (value, i) =>
+            if (i != n) value else if (i == n && isUnique) value.addUnique(a) else value.appended(a)
+        }
+      }
+    }
+    def appendToLast(x: List[A]): List[List[A]] = l.init.appended(l.last ::: x)
+  }
 }

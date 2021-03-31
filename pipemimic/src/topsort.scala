@@ -1,7 +1,6 @@
 package pipemimic
 
 import Adjacency.{AdjacencyList, AdjacencyListFromEdges, FindPathAdj}
-import ListUtils._
 
 import scala.annotation.tailrec
 
@@ -28,7 +27,7 @@ object TopologicalSort {
     /* The destination of each edge is connected */
     def checkDestination(l: List[Int], b: List[Boolean]): List[Boolean] = {
       l match {
-        case head :: next => replaceNth(checkDestination(next, b), head, true, false)
+        case head :: next => checkDestination(next, b).replaceNth(head, true, false)
         case Nil => b
       }
     }
@@ -40,7 +39,7 @@ object TopologicalSort {
       g match {
         case head :: next =>
           val _b = head match {
-            case _ :: _ => /* outgoing edge from this node - edge is connected */ replaceNth(b, n, true, false)
+            case _ :: _ => /* outgoing edge from this node - edge is connected */ b.replaceNth(n, true, false)
             case Nil => /* no outgoing edge from this node */ b
           }
           includeSource(next, checkDestination(head, _b), n + 1)
@@ -55,12 +54,13 @@ object TopologicalSort {
     require(unroll >= 0 && n >= 0)
 
     omr match {
-      case (m, TotalOrdering(r)) => (unroll, NthDefault(n, m, Marking.Unmarked)) match {
+      case (m, TotalOrdering(r)) => (unroll, m.nthDefault(n, Marking.Unmarked)) match {
         case (u, Marking.Unmarked) if u > 0 =>
-          val _m = replaceNth(m, n, Marking.MarkedTemp, Marking.Unmarked)
-          val adjOfN = NthDefault(n, g, Nil)
+          val _m = m.replaceNth(n, Marking.MarkedTemp, Marking.Unmarked)
+          val adjOfN = g.nthDefault(n, Nil)
           adjOfN.foldLeft[(List[Marking.Value], TopSortResult)]((_m, TotalOrdering(r)))((tuple, i) => TopSortVisit(u - 1, g, tuple, i)) match {
-            case (__m, TotalOrdering(__r)) => (replaceNth(__m, n, Marking.Marked, Marking.Unmarked), TotalOrdering(List(n) ::: __r))
+            case (__m, TotalOrdering(__r)) => (__m.replaceNth(n, Marking.Marked, Marking.Unmarked), TotalOrdering
+            (List(n) ::: __r))
             case t => t
           }
         case (u, Marking.Marked) if u > 0 => omr
@@ -73,7 +73,7 @@ object TopologicalSort {
 
   def KeepIfIn(l: List[Int], b: List[Boolean]): List[Int] = {
     l match {
-      case head :: next => if (NthDefault(head, b, false)) head :: KeepIfIn(next, b) else KeepIfIn(next, b)
+      case head :: next => if (b.nthDefault(head, false)) head :: KeepIfIn(next, b) else KeepIfIn(next, b)
       case Nil => Nil
     }
   }

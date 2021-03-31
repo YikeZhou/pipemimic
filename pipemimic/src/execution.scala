@@ -6,7 +6,6 @@ import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils._
 import pipemimic.GraphTree.{DNFOfTree, DNFStringOfTree, TreeOfDNF}
 import pipemimic.Interleavings.Interleave
-import pipemimic.ListUtils._
 import pipemimic.MustHappenBefore._
 import pipemimic.Stages._
 
@@ -134,14 +133,14 @@ object Execution {
   }
 
   def nthEventInScenarioIsWrite(s: Scenario, ge: (Int, Eiid)): Boolean = {
-    NthError(s, ge._2) match {
+    s.lift(ge._2) match {
       case Some(po) => po.evt.isWrite
       case None => false
     }
   }
 
   def VertexHasSameAddress(s: Scenario, l: Location, e: GlobalEvent): Boolean = {
-    NthError(s, e._2) match {
+    s.lift(e._2) match {
       case Some(po) => po.evt.loc == l
       case None => false
     }
@@ -149,7 +148,7 @@ object Execution {
 
   def ReachableVerticesAtSameLocation(p: Pipeline, s: Scenario, src: GlobalEvent,
                                       g: List[(GlobalEvent, GlobalEvent, String)]): List[Eiid] = {
-    NthError(s, src._2) match {
+    s.lift(src._2) match {
       case Some(po) => ReachableVertices(p, src, g)
                         .filter(VertexHasSameAddress(s, po.evt.loc, _))
                         .filter(nthEventInScenarioIsWrite(s, _))
@@ -339,8 +338,8 @@ object Execution {
     */
   def ScenarioExecutionEdges_WS_SortByCore(s: Scenario): List[List[GlobalEvent]] = {
     s match {
-      case head :: next => LastError(head.performStages) match {
-        case Some(PerformStages(l, _, _, _, _)) => AppendToNth(ScenarioExecutionEdges_WS_SortByCore(next),
+      case head :: next => head.performStages.lastOption match {
+        case Some(PerformStages(l, _, _, _, _)) => ScenarioExecutionEdges_WS_SortByCore(next).appendToNth(
           head.evt.iiid.proc, (l, head.evt.eiid))
         case None => ScenarioExecutionEdges_WS_SortByCore(next)
       }
@@ -351,7 +350,7 @@ object Execution {
   def ScenarioExecutionEdges_WS_SortByLoc(s: Scenario): List[List[PathOption]] = {
     s match {
       case head :: next => (head.evt.dirn, head.evt.loc) match {
-        case (Direction.W, l) => AppendToNth(ScenarioExecutionEdges_WS_SortByLoc(next), l, head)
+        case (Direction.W, l) => ScenarioExecutionEdges_WS_SortByLoc(next).appendToNth(l, head)
         case _ => ScenarioExecutionEdges_WS_SortByLoc(next)
       }
       case Nil => Nil
@@ -369,7 +368,7 @@ object Execution {
   def ScenarioExecutionEdges_WS_EdgesPerInterleaving(s: Scenario)
   : List[List[List[(GlobalEvent, GlobalEvent, String)]]] = {
     val i = ScenarioExecutionEdges_WS_Interleavings(s)
-    i.map(_.map(PairConsecutiveWithLabel[GlobalEvent]("WS", _)))
+    i.map(_.map(_.pairConsecutive("WS")))
   }
 
   def ScenarioExecutionEdges_WS_EdgesPerLocation(l: List[List[(GlobalEvent, GlobalEvent, String)]])
@@ -487,7 +486,7 @@ object Execution {
         case MustHappenBefore(g, _) =>
           DotGraph(s"Permitted: ${_n}", g, ungeid(p, _), f, Nil, Nil, p.stages.length)
         case Cyclic(g, l) =>
-          DotGraph(s"Forbidden: ${_n}", g, ungeid(p, _), f, l, PairConsecutive(l), p.stages.length)
+          DotGraph(s"Forbidden: ${_n}", g, ungeid(p, _), f, l, l.pairConsecutive, p.stages.length)
       }
     )
   }

@@ -5,131 +5,6 @@ import pipemimic.Stages.{GlobalEvent, Pipeline}
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
 
-object ListUtils {
-
-  /* Get certain element of a list */
-
-  def LastError[A](l: List[A]): Option[A] = {
-    l.lastOption
-  }
-
-  def Head[T](default: T, l: List[T]): T = {
-    if (l.isEmpty) default else l.head
-  }
-
-  @tailrec
-  def Last[T](l: List[T], default: T): T = {
-    l match {
-      case Nil => default
-      case List(t) => t
-      case _ :: next => Last(next, default)
-    }
-  }
-
-  def Tail[T](x: List[T]): List[T] = {
-    if (x.isEmpty) x else x.tail
-  }
-
-  def NthDefault[T](n: Int, l: List[T], default: T): T = {
-    require(n >= 0)
-    l.lift(n) match {
-      case None => default
-      case Some(value) => value
-    }
-  }
-
-  @tailrec
-  def NthError[T](l: List[T], n: Int): Option[T] = {
-    require(n >= 0)
-    (n, l) match {
-      case (0, head :: _) => Some(head)
-      case (n, _ :: next) => NthError(next, n - 1)
-      case _ => None
-    }
-  }
-
-  /* List of pairs of consecutive elements */
-
-  def PairConsecutive[A](l: List[A]): List[(A, A)] = {
-    l match {
-      case Nil => Nil
-      case lh :: lt => lt match {
-        case Nil => Nil
-        case th :: _ => (lh, th) :: PairConsecutive(lt)
-      }
-    }
-  }
-
-  def PairConsecutiveWithLabel[A](label: String, l: List[A]): List[(A, A, String)] = {
-    l match {
-      case Nil => Nil
-      case lh :: lt => lt match {
-        case Nil => Nil
-        case th :: _ => (lh, th, label) :: PairConsecutiveWithLabel(label, lt)
-      }
-    }
-  }
-
-  /* Add If Unique */
-
-  def AddUnique[A](l: List[A], n: A): List[A] = {
-    if (l.contains(n)) l else l.appended(n)
-  }
-
-  /* Replace the [n]th element of [l] with [v].  If [l] is shorter than [n],
-    fill in empty slots with [d]. */
-  def replaceNth[T](l: List[T], n: Int, v: T, d: T) : List[T] = {
-    require(n >= 0)
-
-    if (l.length <= n) {
-      val count = n - l.length
-      (l ::: List.fill(count)(d)).appended(v)
-    } else {
-      l.updated(n, v)
-    }
-  }
-
-  def replaceNthIfNone[T](l: List[Option[T]], n: Int, v: T): List[Option[T]] = {
-    require(n >= 0)
-
-    if (l.length <= n) (l ::: List.fill(n - l.length)(None)).appended(Some(v))
-    else {
-      val s = l
-      s(n) match {
-        case None => l.updated(n, Some(v))
-        case Some(_) => l
-      }
-    }
-  }
-  
-  /* Append [a] to the [n]th sublist of [l], and create it if it doesn't already exist. */
-  def AppendToNth[T](l: List[List[T]], n: Int, a: T): List[List[T]] = {
-    require(n >= 0)
-
-    l match {
-      case head :: next => if (n > 0) head :: AppendToNth(next, n - 1, a) else head.appended(a) :: next
-      case Nil => if (n > 0) List() :: AppendToNth(List(), n - 1, a) else List(List(a))
-    }
-  }
-
-  def AppendUniqueToNth[T](l: List[List[T]], n: Int, a: T): List[List[T]] = {
-    require(n >= 0)
-    
-    l match {
-      case head :: next => if (n > 0) head :: AppendUniqueToNth(next, n - 1, a) else AddUnique[T](head, a) :: next
-      case Nil => if (n > 0) List() :: AppendUniqueToNth(List(), n - 1, a) else List(List(a))
-    }
-  }
-
-  def AppendToLast[T](x: List[T], l: List[List[T]]): List[List[T]] = {
-    l match {
-      case Nil => List(x)
-      case List(y) => List(x ++ y)
-      case head :: next => head :: AppendToLast(x, next)
-    }
-  }
-}
-
 object CartesianUtils {
 
   /* Cartesian Product of Lists of Lists */
@@ -278,7 +153,7 @@ object Dot {
     l match {
       case head :: next =>
         val (_, e) = f(head)
-        ListUtils.AppendUniqueToNth(GroupNodesByEvent(f, next), e, head)
+        GroupNodesByEvent(f, next).appendToNth(e, head, isUnique = true)
       case Nil => Nil
     }
   }
@@ -288,7 +163,7 @@ object Dot {
     l match {
       case head :: next =>
         val (h1, h2) = (head._1, head._2)
-        val _rNodes = ListUtils.AddUnique(ListUtils.AddUnique(rNodes, h1), h2)
+        val _rNodes = rNodes.addUnique(h1).addUnique(h2)
         EdgeListToNodeList(next, f, _rNodes)
       case Nil => rNodes
     }
@@ -297,8 +172,8 @@ object Dot {
   def SubgraphClusterEntry(nodeToString: Int => String, lBold: List[Int], nodeNumber: Int): String = {
     val format = {
       if (lBold.isEmpty) ""
-      else if (nodeNumber == ListUtils.Head(0, lBold)) s""" [style=filled,color="$startColor"]"""
-      else if (nodeNumber == ListUtils.Last(lBold, 0)) s""" [style=filled,color="$finishColor"]"""
+      else if (nodeNumber == lBold.head) s""" [style=filled,color="$startColor"]"""
+      else if (nodeNumber == lBold.last) s""" [style=filled,color="$finishColor"]"""
       else if (lBold.contains(nodeNumber)) s""" [style=filled,color="$middleColor"]"""
       else ""
     }
@@ -329,7 +204,8 @@ object Dot {
     @tailrec
     def helper(f: Int => Int, pMax: Int, l: List[Int], r1: List[List[Int]], r2: List[Int]): (List[List[Int]], List[Int]) = {
       l match {
-        case head :: next => if (pMax <= f(head)) helper(f, pMax, next, r1, ListUtils.AddUnique(r2, head)) else helper(f, pMax, next, ListUtils.AppendToNth(r1, f(head), head), r2)
+        case head :: next => if (pMax <= f(head)) helper(f, pMax, next, r1, r2.addUnique(head)) else
+          helper(f, pMax, next, r1.appendToNth(f(head), head), r2)
         case Nil => (r1, r2)
       }
     }
@@ -340,8 +216,8 @@ object Dot {
   def standaloneNode(f: Int => String, lBold: List[Int], n: Int): String = {
     val format = {
       if (lBold.isEmpty) ""
-      else if (n == ListUtils.Head(0, lBold)) s""" [style=filled,color="$startColor"]"""
-      else if (n == ListUtils.Last(lBold, 0)) s""" [style=filled,color="$finishColor"]"""
+      else if (n == lBold.head) s""" [style=filled,color="$startColor"]"""
+      else if (n == lBold.last) s""" [style=filled,color="$finishColor"]"""
       else if (lBold.contains(n)) s""" [style=filled,color="$middleColor"]"""
       else ""
     }

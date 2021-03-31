@@ -5,7 +5,6 @@ import java.io._
 import org.scalatest.flatspec.AnyFlatSpec
 import pipemimic.PreservedProgramOrder.GraphsToVerifyTSOPPO
 import pipemimic.Stages._
-import ListUtils._
 
 import scala.annotation.tailrec
 
@@ -26,7 +25,7 @@ object Gem5Test {
   /**
    * The output order is guaranteed to match some previous ordering
    */
-  def Restore(n: Int): LocalReordering = e => _ => NthDefault(n, e, Nil)
+  def Restore(n: Int): LocalReordering = e => _ => e.nthDefault(n, Nil)
 
   /* Special Edge Maps */
 

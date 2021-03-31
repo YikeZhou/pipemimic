@@ -1,7 +1,5 @@
 package pipemimic
 
-import ListUtils._
-
 import scala.annotation.tailrec
 
 object Stages {
@@ -82,8 +80,8 @@ object Stages {
     * @return if (e1, e2) is a TransferredEdge from v1 to v2
     */
   def TransferredEdge(paths: PathMap, v1: Location, v2: Location, e1: Event, e2: Event): Boolean = {
-    val p1 = NthDefault(e1.eiid, paths, List.empty[(Location, Location)])
-    val p2 = NthDefault(e2.eiid, paths, List.empty[(Location, Location)])
+    val p1 = paths.nthDefault(e1.eiid, List.empty[(Location, Location)])
+    val p2 = paths.nthDefault(e2.eiid, List.empty[(Location, Location)])
     p1.contains((v1, v2)) && p2.contains((v1, v2))
   }
 
@@ -185,7 +183,7 @@ object Stages {
     */
   def ProgramOrderEdges(l: List[Event]): List[(Event, Event)] = {
     /* sorted by processor index */
-    val sortedEvents = l.foldLeft(List.empty[List[Event]])((_l, e) => AppendToNth(_l, e.iiid.proc, e))
+    val sortedEvents = l.foldLeft(List.empty[List[Event]])((_l, e) => _l.appendToNth(e.iiid.proc, e))
     /* generate all program order edges (not sorted by processor ids in return value) */
     sortedEvents.flatMap(PathTransitiveClosure)
   }
@@ -224,7 +222,7 @@ object Stages {
           /* when there are events left, calculate their program order edges and append to edgesAll;
            * since the events are sorted by first location, this can be done along with calculating edges
            * before location 0 */
-          helper(paths, AppendToLast(ProgramOrderEdges(eh), EdgesToEdges(paths, oh, edgesAll)), et, ot)
+          helper(paths, EdgesToEdges(paths, oh, edgesAll).appendToLast(ProgramOrderEdges(eh)), et, ot)
         case (oh :: ot, _) =>
           /* when there are no more events left (meaning that no more events starts at current location) in the poEvents
            * list, keep calculate EdgesToEdges until the last location in list of locations, a.k.a., localReorderings */
@@ -251,7 +249,7 @@ object Stages {
 
   def GlobalEventString(p: Pipeline, ge: GlobalEvent): String = {
     val (n, e) = ge
-    (NthError(p.stages, n), n - p.stages.length) match {
+    (p.stages.lift(n), n - p.stages.length) match {
       case (Some(s), _) => s"Event${e}at${s.name}"
       case (None, 0) => s"CacheLine${e}Create"
       case (None, 1) => s"CacheLine${e}Invalidate"
@@ -437,7 +435,7 @@ object Stages {
           val e = head.evt
           val p = head.path
           p match {
-            case h :: _ => helper(AppendToNth(l, h, e), next) /* h: first location in the path */
+            case h :: _ => helper(l.appendToNth(h, e), next) /* h: first location in the path */
             case Nil => helper(l, next) /* path is nil */
           }
         case Nil => l
@@ -454,7 +452,7 @@ object Stages {
     * @return set of global edges
     */
   def ScenarioIntraLocationGlobalEdges(s: Scenario, pipeline: Pipeline): GlobalGraph = {
-    val pathPairs = s.map(/* get path for each event */_.path).map(/* get edges */PairConsecutive)
+    val pathPairs = s.map(/* get path for each event */_.path).map(/* get edges */_.pairConsecutive)
     val localReorderings = pipeline.stages.map(_.localReordering)
     IntraLocationGlobalEdges(0, IntraLocationEdges(pathPairs, EventsSortedByFirstLocation(s), localReorderings))
   }
@@ -533,7 +531,7 @@ object Stages {
       case Nil => Nil
       case head :: next =>
         val default: SpecialEdgeMap = _ => _ => _ => List.empty[(GlobalEvent, GlobalEvent, String)]
-        val m = NthDefault(head, p.stages.map(_.specialEdges), default)
+        val m = p.stages.map(_.specialEdges).nthDefault(head, default)
         LocationSpecialEdges(e, events, m) ::: PathPipelineSpecialEdges(next, e, events, p)
     }
   }

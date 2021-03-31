@@ -12,7 +12,7 @@ object Bell {
     def helper(l: List[Int], r: List[Int]): List[Int] = {
       l match {
         case Nil => r
-        case head :: next => helper(next, ListUtils.AddUnique(r, head))
+        case head :: next => helper(next, r.addUnique(head))
       }
     }
 
