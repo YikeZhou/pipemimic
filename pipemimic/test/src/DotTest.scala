@@ -1,9 +1,9 @@
 package pipemimic
 
-import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
-
 import Dot._
+
+import scala.annotation.tailrec
 
 class DotTest extends AnyFlatSpec {
   "FormatString" should "drop empty string in list" in {
@@ -24,10 +24,11 @@ class DotTest extends AnyFlatSpec {
     )
 
     def myNString(n: Int): String = {
+      @tailrec
       def helper(n: Int, e: Int): String = {
         (e, n) match {
           case (_e, _) if _e >= 10 => "Overflow"
-          case (_, _n) if n >= 5 => helper(n - 5, e + 1)
+          case (_, _) if n >= 5 => helper(n - 5, e + 1)
           case _ => s"Event${e}AtLocation$n"
         }
       }
@@ -55,6 +56,11 @@ class DotTest extends AnyFlatSpec {
       }
     }
 
-    println(DotGraph("sample", myGraph.map(myGepid(_)), myUngeid, myNString, Nil, Nil, 5))
+    println(DotGraph("sample", myGraph.map(myGepid), myUngeid, myNString, Nil, Nil, 5))
+
+//    "DotGraph class" should "generate correct graph as well"
+    val dot = new DotGraph("sample", myGraph.map(myGepid), myUngeid, myNString, Nil, Nil, 5)
+    println(dot.formattedGraph)
+    dot.write("./graphs")
   }
 }
