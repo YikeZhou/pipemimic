@@ -1,8 +1,6 @@
 package pipemimic
 
-import CartesianUtils.CartesianProduct
 import Execution.GraphsToVerifyExecution
-import Stages.Pipeline
 
 import scala.annotation.tailrec
 

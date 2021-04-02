@@ -4,7 +4,6 @@ import java.io._
 
 import org.scalatest.flatspec.AnyFlatSpec
 import pipemimic.PreservedProgramOrder.GraphsToVerifyTSOPPO
-import pipemimic.Stages._
 
 /** Traditional Five-Stage SCProc Pipeline */
 object SCProcTest {

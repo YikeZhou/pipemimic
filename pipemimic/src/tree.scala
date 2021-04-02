@@ -1,7 +1,5 @@
 package pipemimic
 
-import CartesianUtils.CartesianProduct
-
 /**
   * A GraphTree is a data structure which is used to represent a set of graphs that are mostly similar, but with a few
   * small differences. For example, suppose we want to represent two graphs: one which adds an edge e1 to a graph G, and

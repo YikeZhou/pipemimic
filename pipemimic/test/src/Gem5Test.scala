@@ -4,7 +4,6 @@ import java.io._
 
 import org.scalatest.flatspec.AnyFlatSpec
 import pipemimic.PreservedProgramOrder.GraphsToVerifyTSOPPO
-import pipemimic.Stages._
 
 import scala.annotation.tailrec
 
@@ -186,7 +185,7 @@ object Gem5Test {
 
 class Gem5Test extends AnyFlatSpec {
   "it" should "pass all litmus tests" in {
-    val allPPOGraphs = GraphsToVerifyTSOPPO(Gem5Test.Gem5O3Pipeline(1))
+    val allPPOGraphs = GraphsToVerifyTSOPPO(Gem5Test.Gem5O3Pipeline(2))
     println(s"found ${allPPOGraphs.length} ppo graphs")
     val allLitmusTestGraphs = Litmus.AllLitmusTests.map(t => t (Gem5Test.Gem5O3Pipeline(4)))
     println(s"found ${allLitmusTestGraphs.length} litmus test graphs")

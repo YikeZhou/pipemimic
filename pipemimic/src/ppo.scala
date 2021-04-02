@@ -1,7 +1,6 @@
 package pipemimic
 
 import pipemimic.Bell.BellNumber
-import pipemimic.CartesianUtils.CartesianProduct
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
 import pipemimic.MustHappenBefore.TreeMustHappenBeforeInAllGraphs

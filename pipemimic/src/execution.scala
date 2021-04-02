@@ -1,7 +1,6 @@
 package pipemimic
 
 import pipemimic.Adjacency.Dijkstra
-import pipemimic.CartesianUtils._
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils._
 import pipemimic.Interleavings.Interleave

@@ -1,55 +1,7 @@
 package pipemimic
 
-import pipemimic.Stages.{GlobalEvent, Pipeline}
-
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
-
-object CartesianUtils {
-
-  /* Cartesian Product of Lists of Lists */
-
-  def CartesianProduct[T](l: List[List[T]]): List[List[T]] = {
-    /**
-      * Given a head element [h] and a list of tail lists [t], generate
-      * the list of lists with [h] prepended to each list in [t].
-      *
-      * @param h head element
-      * @param t list of tail lists
-      * @return list of lists with `h` prepended to each list in `t`
-      */
-    def prependOne[A](h: A, t: List[List[A]]): List[List[A]] = t.map( h :: _ )
-
-    /**
-      * Given a list of head elements [h] and a list of tail lists [t],
-      * generate the list of lists with each element of [h] prepended to
-      * each list in [t].
-      *
-      * @param h list of head elements
-      * @param t list of tail lists
-      * @return list of lists with each element of `h` prepended to each list in `t`
-      */
-    def prependList[B](h: List[B], t: List[List[B]]): List[List[B]] = {
-      h match {
-        case head :: next => prependOne(head, t) ++ prependList(next, t)
-        case Nil => Nil
-      }
-    }
-
-    l match {
-      case Nil => Nil
-      case List(h) => h.map(x => List(x))
-      case head :: next => prependList(head, CartesianProduct(next))
-    }
-  }
-
-  /* Cartesian Product of Two Lists as Pairs */
-
-  def CartesianProductPairs[A, B](h: List[A], t: List[B]): List[(A, B)] = {
-    def helper[C, D](h: C, t: List[D]): List[(C, D)] = t.map((h, _))
-    h.map(helper(_, t)).foldLeft(List.empty[(A, B)])(_ ++ _)
-  }
-}
 
 class TinyTimer(name: String) {
   var start: Long = _
@@ -189,10 +141,13 @@ object Dot {
     """
   }
 
-  def SubgraphClusters(nodeToString: Int => String, lBold: List[Int], listOfNodesForEachEvent: List[List[Int]]): String = {
-    def helper(eventNumber: Int, nodeToString: Int => String, lBold: List[Int], listOfNodesForEachEvent: List[List[Int]]): String = {
+  def SubgraphClusters(nodeToString: Int => String, lBold: List[Int], listOfNodesForEachEvent: List[List[Int]])
+  : String = {
+    def helper(eventNumber: Int, nodeToString: Int => String, lBold: List[Int],
+               listOfNodesForEachEvent: List[List[Int]]): String = {
       listOfNodesForEachEvent match {
-        case head :: next => SubgraphCluster(eventNumber, nodeToString, lBold, head) ++ helper(eventNumber + 1, nodeToString, lBold, next)
+        case head :: next => SubgraphCluster(eventNumber, nodeToString, lBold, head) ++ helper(eventNumber + 1,
+          nodeToString, lBold, next)
         case Nil => ""
       }
     }
@@ -252,7 +207,8 @@ object Dot {
     * @param pMax the length of the pipeline. Vertices with locations > pMax (i.e., cache events) will noe necessarily be clustered with the pipeline.
     * @return graph described in dot grammar
     */
-  def DotGraph(name: String, lNormal: List[(Int, Int, String)], fStageEvent: Int => (Int, Int), fString: Int => String, lBold: List[Int], lThick: List[(Int, Int)], pMax: Int): String = {
+  def DotGraph(name: String, lNormal: List[(Int, Int, String)], fStageEvent: Int => (Int, Int), fString: Int => String,
+               lBold: List[Int], lThick: List[(Int, Int)], pMax: Int): String = {
     val ms = new TinyTimer("dot_graph")
     ms.reset()
     val fStage: Int => Int = fStageEvent(_)._1
@@ -265,7 +221,8 @@ object Dot {
       labellloc="t";
       label="$name";
       newrank=true;
-      ${SubgraphClusters(fString, lBold, lSameEvent)}${ranks(fString, lBold, lRanked)}${unranked(fString, lBold, lUnranked)}${EdgeStrings(fString, fStageEvent, lNormal, lThick)}}
+      ${SubgraphClusters(fString, lBold, lSameEvent)}${ranks(fString, lBold, lRanked)}
+      ${unranked(fString, lBold, lUnranked)}${EdgeStrings(fString, fStageEvent, lNormal, lThick)}}
       """
     println(ms)
     result

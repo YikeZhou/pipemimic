@@ -1,7 +1,6 @@
 package pipemimic
 
 import pipemimic.PreservedProgramOrder.GraphsToVerifyTSOPPO
-import pipemimic.Stages.{GlobalGraph, LocalReordering, PathOption, PathOptions, PerformStages, Pipeline, SpecialEdgeMap, Stage}
 import java.io._
 
 import org.scalatest.flatspec.AnyFlatSpec
