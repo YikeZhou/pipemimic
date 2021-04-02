@@ -3,9 +3,7 @@ package pipemimic
 import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 
-import TopologicalSort._
-
-class TopSortTest extends AnyFlatSpec {
+class TopSortTest extends AnyFlatSpec with AcyclicCheck {
   "EdgesWithConnections" should "return boolean list" in {
     val input = List(List(12, 8, 4), Nil, Nil, Nil, List(12, 8), Nil, Nil, Nil, List(12))
     assert(EdgesWithConnections(input) == List(true, false, false, false, true, false, false, false, true, false, false, false, true))

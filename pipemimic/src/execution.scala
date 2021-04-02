@@ -1,6 +1,6 @@
 package pipemimic
 
-import pipemimic.Adjacency.Dijkstra
+//import pipemimic.Adjacency.Dijkstra
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils._
 import pipemimic.Interleavings.Interleave
@@ -9,7 +9,7 @@ import pipemimic.Stages._
 
 import scala.annotation.tailrec
 
-object Execution {
+object Execution extends AcyclicCheck {
 
   /* Calculation of uhb graphs */
 

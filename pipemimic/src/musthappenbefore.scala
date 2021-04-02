@@ -1,8 +1,5 @@
 package pipemimic
 
-import TopologicalSort.TopSort
-import Adjacency.{Dijkstra, PathBacktrace}
-
 import scala.annotation.tailrec
 
 sealed abstract class MHBResult
@@ -11,21 +8,7 @@ case class Unverified(g: List[(Int, Int, String)], a: Int, b: Int) extends MHBRe
 case class MustHappenBefore(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult
 case class Cyclic(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult
 
-object MustHappenBefore {
-   private def VerifyMustHappenBeforeInGraph(g: List[(Int, Int, String)], sd: (Int, Int)): MHBResult = {
-    val (src, dst) = sd
-    val _g = g.map(node => (node._1, node._2))
-    TopSort(_g) match {
-      case TotalOrdering(_) =>
-        val (reachable, prev) = Dijkstra(_g, src)
-        if (reachable.contains(dst)) {
-          MustHappenBefore(g, PathBacktrace(_g, prev, src, dst))
-        } else {
-          Unverified(g, src, dst)
-        }
-      case CycleFound(p) => Cyclic(g, p)
-    }
-  }
+object MustHappenBefore extends AcyclicCheck {
 
   def TreeMustHappenBeforeInAllGraphs(g: GraphTree[Int], v: GraphTree[Int]): List[(String, MHBResult)] = {
 

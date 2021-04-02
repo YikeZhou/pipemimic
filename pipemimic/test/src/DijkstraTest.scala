@@ -3,9 +3,7 @@ package pipemimic
 import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 
-import Adjacency._
-
-class DijkstraTest extends AnyFlatSpec {
+class DijkstraTest extends AnyFlatSpec with AcyclicCheck {
   "AdjacencyListFromEdges" should "return adjacency list" in {
     var exampleGraph = (0, 1) :: (0, 2) :: (1, 3) :: (2, 3) :: Nil
     var adjacencyList = List(2, 1) :: List(3) :: List(3) :: Nil
