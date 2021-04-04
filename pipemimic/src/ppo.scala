@@ -3,13 +3,13 @@ package pipemimic
 import pipemimic.Bell.BellNumber
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
-import pipemimic.MustHappenBefore.TreeMustHappenBeforeInAllGraphs
 import pipemimic.Stages._
+import MustHappenBefore._
 
 import scala.annotation.tailrec
 
 /** ppo/po-loc satisfaction tests */
-object PreservedProgramOrder {
+object PreservedProgramOrder extends AcyclicCheck {
 
   /**
     * Perform with respect to other cores before with respect to localCore
@@ -57,6 +57,45 @@ object PreservedProgramOrder {
     */
   def VerifyPPOScenario(g: GraphTree[GlobalEvent], v: GraphTree[GlobalEvent], p: Pipeline)
   : List[(String, MHBResult)] = {
+
+    def TreeMustHappenBeforeInAllGraphs(g: GraphTree[Int], v: GraphTree[Int]): List[(String, MHBResult)] = {
+
+      @tailrec
+      def boolPair(g: List[(Int, Int, String)], lsd: List[(Int, Int, String)], lr: List[MHBResult], b: Boolean): (Boolean, List[MHBResult]) = {
+        lsd match {
+          case head :: next =>
+            val r = VerifyMustHappenBeforeInGraph(g, (head._1, head._2))
+            r match {
+              case Unverified(_, _, _) => boolPair(g, next, r :: lr, b = false)
+              case MustHappenBefore(_, _) => boolPair(g, next, r :: lr, b)
+              case Cyclic(_, _) => boolPair(g, next, r :: lr, b)
+            }
+          case Nil => (b, lr)
+        }
+      }
+
+      @tailrec
+      def stringPair(n: String, g: List[(Int, Int, String)], lv: List[(String, List[(Int, Int, String)])], lr: List[(String, MHBResult)]): List[(String, MHBResult)] = {
+        lv match {
+          case (hn, hv) :: next =>
+            val (b, r) = boolPair(g, hv, Nil, b = true) /* lv: result of DNFOfTree */
+          val _r = r.map((s"$n:$hn", _))
+            /* It seems that edges in lv should appear in every graph in g,
+            * but here only check for existence in g */
+            if (b) /* success */ _r else /* check next one */ stringPair(n, g, next, lr ::: _r)
+          case Nil => lr
+        }
+      }
+
+      def helper(lg: List[(String, List[(Int, Int, String)])], lv: List[(String, List[(Int, Int, String)])]): List[(String, MHBResult)] = {
+        lg match {
+          case (hs, hg) :: next => stringPair(hs, hg, lv, Nil) ::: helper(next, lv)
+          case Nil => Nil
+        }
+      }
+
+      helper(g.flatten, v.flatten)
+    }
     TreeMustHappenBeforeInAllGraphs(getid(p, g), getid(p, v))
   }
 
