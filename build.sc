@@ -21,7 +21,8 @@ object parser extends JavaModule {
     }
 
     Tool.main(Array(
-      s"${millSourcePath.toString}/Expr.g4",
+      s"${millSourcePath.toString}/ArithmeticLexer.g4",
+      s"${millSourcePath.toString}/ArithmeticParser.g4",
       "-o", s"${millSourcePath.toString}/src/litmus/antlr",
       "-package", "litmus.antlr",
       "-visitor"
