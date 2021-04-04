@@ -11,3 +11,5 @@ out/
 graphs/
 
 parser/src/
+gen/
+*.tokens
