@@ -256,4 +256,10 @@ package object pipemimic {
     def helper[C, D](h: C, t: List[D]): List[(C, D)] = t.map((h, _))
     h.map(helper(_, t)).foldLeft(List.empty[(A, B)])(_ ++ _)
   }
+
+  /* Litmus Test Constants */
+
+  object LitmusTestExpectation extends Enumeration {
+    val Forbidden, Permitted = Value
+  }
 }
