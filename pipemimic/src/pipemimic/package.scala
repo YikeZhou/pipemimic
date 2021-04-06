@@ -20,6 +20,7 @@ package object pipemimic {
 
   abstract class Action /* an access specified by polarity + location + value */
   case class Access(d: Direction.Value, l: Location, v: Value) extends Action
+  case class MemoryFence() extends Action
 
   /**
     * Each instance of an instruction in a program execution may

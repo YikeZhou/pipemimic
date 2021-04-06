@@ -1,0 +1,6 @@
+parser/src/litmus/antlr/LitmusTestLexer.java
+parser/src/litmus/antlr/LitmusTestParserBaseListener.java
+parser/src/litmus/antlr/LitmusTestParserBaseVisitor.java
+parser/src/litmus/antlr/LitmusTestParser.java
+parser/src/litmus/antlr/LitmusTestParserListener.java
+parser/src/litmus/antlr/LitmusTestParserVisitor.java
