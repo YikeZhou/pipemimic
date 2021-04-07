@@ -33,18 +33,28 @@ package object pipemimic {
     * @param action the associated action
     */
   case class Event(eiid: Eiid, iiid: Iiid, action: Action) {
-    def dirn: Direction.Value = {
+    def dirn: Option[Direction.Value] = {
       this.action match {
-        case Access(d, _, _) => d
+        case Access(d, _, _) => Some(d)
+        case MemoryFence() => None
       }
     }
 
-    def loc: Location = {
+    def loc: Option[Location] = {
       this.action match {
-        case Access(_, l, _) => l
+        case Access(_, l, _) => Some(l)
+        case MemoryFence() => None
       }
     }
 
-    def isWrite: Boolean = this.dirn == Direction.W
+    def isWrite: Boolean = {
+      val direction = this.dirn
+      direction.isDefined && direction.get == Direction.W
+    }
+
+    def isRead: Boolean = {
+      val direction = this.dirn
+      direction.isDefined && direction.get == Direction.R
+    }
   }
 }

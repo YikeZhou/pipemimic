@@ -41,7 +41,7 @@ object GraphTree {
     t match {
       case GraphTreeOr(l) => l.flatMap(DNFOfTree[T]) /* every element in l is a graph */
       case GraphTreeAnd(l) => /* first calculate each branch - List(List(g1, g2), List(g3, g4)) */
-        val _l: List[List[(String, List[(T, T, String)])]] = l.map(DNFOfTree)
+        val _l: List[List[(String, List[(T, T, String)])]] = l.map(DNFOfTree).filterNot(_.isEmpty)
         /* cartesian product yields every combination of graph edge set, then fold list of set into list of edges */
         CartesianProduct(_l).map(_.foldLeft(("", List.empty[(T, T, String)]))((h, n) => joinGraphs(h, n)))
       case GraphTreeLeaf(s, l) => List((s, l)) /* a leaf represents one graph */

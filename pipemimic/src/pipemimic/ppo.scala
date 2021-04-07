@@ -223,13 +223,14 @@ object PreservedProgramOrder {
               }
             }
             val dirs = s.map(_.evt.dirn)
-            (NthDefault(e1, dirs, Direction.W), NthDefault(e2, dirs, Direction.W)) match {
-              case (Direction.R, Direction.R) => GraphTreeOr(
-                // FIXME: Missing PPOSpeculativeLoadReorderEvents
-                List(PPOMustHappenBeforeGlobalEvents(s, e1, e2))
-              )
-              case _ => PPOMustHappenBeforeGlobalEvents(s, e1, e2)
-            }
+            PPOMustHappenBeforeGlobalEvents(s, e1, e2)
+//            (NthDefault(e1, dirs, Direction.W), NthDefault(e2, dirs, Direction.W)) match {
+//              case (Direction.R, Direction.R) => GraphTreeOr(
+//                // FIXME: Missing PPOSpeculativeLoadReorderEvents
+//                List(PPOMustHappenBeforeGlobalEvents(s, e1, e2))
+//              )
+//              case _ => PPOMustHappenBeforeGlobalEvents(s, e1, e2)
+//            }
           }
 
           // FIXME: is this static edges? type: GlobalEvent
@@ -275,11 +276,12 @@ object PreservedProgramOrder {
                 case _ => GraphTree.GraphTreeEmptyLeaf[GlobalEvent]
               }
             }
-            val dirs = s.map(_.evt.dirn)
-            (NthDefault(e1, dirs, Direction.W), NthDefault(e2, dirs, Direction.W)) match {
-              case (Direction.R, Direction.R) => GraphTreeOr(List(PPOMustHappenBeforeLocalEvents(s, e1, e2)))
-              case _ => PPOMustHappenBeforeLocalEvents(s, e1, e2)
-            }
+            PPOMustHappenBeforeLocalEvents(s, e1, e2)
+//            val dirs = s.map(_.evt.dirn)
+//            (NthDefault(e1, dirs, Direction.W), NthDefault(e2, dirs, Direction.W)) match {
+//              case (Direction.R, Direction.R) => GraphTreeOr(List(PPOMustHappenBeforeLocalEvents(s, e1, e2)))
+//              case _ => PPOMustHappenBeforeLocalEvents(s, e1, e2)
+//            }
           }
 
           val g = ScenarioEdges("PPOLocal", p, s)

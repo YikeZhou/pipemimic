@@ -1,4 +1,4 @@
-.PHONY: testAll testOne initSubmodule graph clean litmusPreview genAntlr loadTests
+.PHONY: testAll testOne initSubmodule graph clean litmusPreview genAntlr loadTests runLitmusTests
 
 project_name=pipemimic
 test_target=
@@ -45,3 +45,5 @@ genAntlr: $(java_srcs)
 loadTests: $(java_srcs) $(litmus_tests)
 	mill pipemimic.runMain pipemimic.LitmusFileTest $(litmus_tests)
 
+runLitmusTests: $(java_srcs) $(litmus_tests)
+	mill pipemimic.runMain pipemimic.TestSuite $(litmus_tests)
