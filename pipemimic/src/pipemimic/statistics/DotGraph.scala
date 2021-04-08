@@ -1,7 +1,9 @@
-package pipemimic
+package pipemimic.statistics
 
 import scala.collection.mutable
 import java.io._
+
+import pipemimic.ProgramOrderIndex
 
 /**
   * Build a dot graph
