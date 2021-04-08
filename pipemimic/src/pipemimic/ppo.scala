@@ -4,11 +4,12 @@ import pipemimic.Bell.BellNumber
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
 import pipemimic.Stages._
+import pipemimic.topology.VerifyMustHappenBeforeInGraph
 
 import scala.annotation.tailrec
 
 /** ppo/po-loc satisfaction tests */
-object PreservedProgramOrder extends AcyclicCheck {
+object PreservedProgramOrder {
 
   /**
     * Perform with respect to other cores before with respect to localCore
@@ -63,7 +64,7 @@ object PreservedProgramOrder extends AcyclicCheck {
       def boolPair(g: List[(Int, Int, String)], lsd: List[(Int, Int, String)], lr: List[MHBResult], b: Boolean): (Boolean, List[MHBResult]) = {
         lsd match {
           case head :: next =>
-            val r = VerifyMustHappenBeforeInGraph(g, (head._1, head._2))
+            val r = g.existsPath((head._1, head._2))
             r match {
               case Unverified(_, _, _) => boolPair(g, next, r :: lr, b = false)
               case MustHappenBefore(_, _) => boolPair(g, next, r :: lr, b)

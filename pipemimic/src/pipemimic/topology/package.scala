@@ -32,4 +32,19 @@ package object topology {
     val Unmarked, MarkedTemp, Marked = Value
   }
 
+  implicit class VerifyMustHappenBeforeInGraph(g: List[(Int, Int, String)]) {
+    def existsPath(src: Int, dst: Int): MHBResult = {
+      val graphWithoutLabel = g map { case (s, d, _) => (s, d) }
+      TopologicalSort(graphWithoutLabel) match {
+        case TotalOrdering(_) =>
+          /* find path from src to dst */
+          val path = PathFinder.findPath(graphWithoutLabel.toAdjacencyList, src, dst)
+          if (path.nonEmpty) MustHappenBefore(g, path) else Unverified(g, src, dst)
+        case CycleFound(cycle) =>
+          Cyclic(g, cycle)
+      }
+    }
+    def existsPath(sd: (Int, Int)): MHBResult = existsPath(sd._1, sd._2)
+  }
+
 }

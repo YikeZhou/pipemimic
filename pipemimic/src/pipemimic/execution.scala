@@ -5,11 +5,12 @@ import pipemimic.Stages._
 import ListUtils._
 import Interleavings.Interleave
 import pipemimic.MustHappenBefore.TreeAcyclicInSomeGraph
+import pipemimic.topology.PathFinder
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
-object Execution extends AcyclicCheck with GlobalGraphID {
+object Execution extends GlobalGraphID {
 
   /* Calculation of uhb graphs */
 
@@ -126,7 +127,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
   : List[GlobalEvent] = {
     val g2 = g.map(gepid(p, _))
     val g3 = g2.map(x => (x._1, x._2))
-    val (reachable, _) = Dijkstra(g3, geid(p, src))
+    val reachable = PathFinder(g3, geid(p, src)).getAllReachableNodes
     reachable.map(ungeid(p, _))
   }
 

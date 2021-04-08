@@ -1,7 +1,8 @@
-package pipemimic
+package pipemimic.statistics
 
 import org.scalatest.flatspec.AnyFlatSpec
-import Dot._
+import pipemimic.Dot._
+import pipemimic._
 
 import scala.annotation.tailrec
 

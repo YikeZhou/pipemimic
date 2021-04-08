@@ -2,13 +2,15 @@ package pipemimic
 
 import scala.annotation.tailrec
 
+import topology.VerifyMustHappenBeforeInGraph
+
 sealed abstract class MHBResult
 
 case class Unverified(g: List[(Int, Int, String)], a: Int, b: Int) extends MHBResult
 case class MustHappenBefore(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult
 case class Cyclic(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult
 
-object MustHappenBefore extends AcyclicCheck {
+object MustHappenBefore {
 
   def TreeMustHappenBeforeInAllGraphs(g: GraphTree[Int], v: GraphTree[Int]): List[(String, MHBResult)] = {
 
@@ -16,7 +18,7 @@ object MustHappenBefore extends AcyclicCheck {
     def boolPair(g: List[(Int, Int, String)], lsd: List[(Int, Int, String)], lr: List[MHBResult], b: Boolean): (Boolean, List[MHBResult]) = {
       lsd match {
         case head :: next =>
-          val r = VerifyMustHappenBeforeInGraph(g, (head._1, head._2))
+          val r = g.existsPath((head._1, head._2))
           r match {
             case Unverified(_, _, _) => boolPair(g, next, r :: lr, b = false)
             case MustHappenBefore(_, _) => boolPair(g, next, r :: lr, b)
@@ -55,7 +57,7 @@ object MustHappenBefore extends AcyclicCheck {
     def helper(lg: List[(String, List[(Int, Int, String)])], lr: List[(String, MHBResult)]): (List[(String, MHBResult)], Boolean) = {
       
       def tuple(g: List[(Int, Int, String)]): (MHBResult, Boolean) = {
-        val r = VerifyMustHappenBeforeInGraph(g, (0, 0))
+        val r = g.existsPath(0, 0)
         r match {
           case Cyclic(_, _) => (r, false)
           case _ => (r, true) /* can happen */
