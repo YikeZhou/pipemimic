@@ -12,7 +12,7 @@ class TopologicalSort(g: EdgeList) {
   /* Given an adjacency list, return a list of incoming degree for each node */
   private val incomingDegree = {
     val degrees = Array.fill(nodeCnt)(0)
-    adj.zipWithIndex.foreach { case (neighbors, u) =>
+    adj.foreach { neighbors =>
       for (v <- neighbors)
         degrees(v) += 1
     }
@@ -41,13 +41,11 @@ class TopologicalSort(g: EdgeList) {
     val n = incomingDegree.indexWhere(_ != 0)
     result = CycleFound(PathFinder.findPath(adj, n, n))
   }
-
-  def getResult: TopSortResult = result
 }
 
 object TopologicalSort {
   def apply(g: EdgeList): TopSortResult = {
     val topologicalSort = new TopologicalSort(g)
-    topologicalSort.getResult
+    topologicalSort.result
   }
 }
