@@ -83,4 +83,17 @@ class PathFinder(g: AdjacencyList, src: Node) {
 
 object PathFinder {
   def apply(g: EdgeList, src: Node): PathFinder = new PathFinder(g.toAdjacencyList, src)
+
+  def findPath(g: AdjacencyList, src: Node, dst: Node): List[Node] = {
+    val pathFinder = new PathFinder(g, src)
+    pathFinder.findPath(dst)
+  }
+}
+
+object PathFinderTest extends App {
+  val cycle = List(
+    (0, 1), (1, 2), (2, 0), (1, 3), (2, 3)
+  )
+  val pathFinder = PathFinder(cycle, 0)
+
 }

@@ -51,7 +51,8 @@ object TopologicalSort {
     includeSource(g, Nil, 0)
   }
 
-  def TopSortVisit(unroll: Int, g: List[List[Int]], omr: (List[Marking.Value], TopSortResult), n: Int): (List[Marking.Value], TopSortResult) = {
+  def TopSortVisit(unroll: Int, g: List[List[Int]], omr: (List[Marking.Value], TopSortResult), n: Int)
+  : (List[Marking.Value], TopSortResult) = {
     require(unroll >= 0 && n >= 0)
 
     omr match {
@@ -59,7 +60,8 @@ object TopologicalSort {
         case (u, Marking.Unmarked) if u > 0 =>
           val _m = replaceNth(m, n, Marking.MarkedTemp, Marking.Unmarked)
           val adjOfN = NthDefault(n, g, Nil)
-          adjOfN.foldLeft[(List[Marking.Value], TopSortResult)]((_m, TotalOrdering(r)))((tuple, i) => TopSortVisit(u - 1, g, tuple, i)) match {
+          adjOfN.foldLeft[(List[Marking.Value], TopSortResult)]((_m, TotalOrdering(r)))((tuple, i) =>
+            TopSortVisit(u - 1, g, tuple, i)) match {
             case (__m, TotalOrdering(__r)) => (replaceNth(__m, n, Marking.Marked, Marking.Unmarked), TotalOrdering(List(n) ::: __r))
             case t => t
           }
@@ -81,7 +83,8 @@ object TopologicalSort {
   def TopSortAdj(g: List[List[Int]]): TopSortResult = {
     def helper(g: List[List[Int]]): TopSortResult = {
       val l = g.map(_.length).foldLeft(g.length)( _ + _ )
-      ((l - 1) to 0 by -1).foldLeft[(List[Marking.Value], TopSortResult)]((Nil, TotalOrdering(Nil)))((t, i) => TopSortVisit(l, g, t, i)) match {
+      ((l - 1) to 0 by -1).foldLeft[(List[Marking.Value], TopSortResult)]((Nil, TotalOrdering(Nil)))((t, i) =>
+        TopSortVisit(l, g, t, i)) match {
         case (_, r) => r
       }
     }

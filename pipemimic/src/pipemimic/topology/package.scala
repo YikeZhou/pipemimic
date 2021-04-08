@@ -23,4 +23,13 @@ package object topology {
     }
   }
 
+  sealed abstract class TopSortResult
+
+  case class TotalOrdering(order: List[Node]) extends TopSortResult
+  case class CycleFound(cycle: List[Node]) extends TopSortResult
+
+  object Marking extends Enumeration {
+    val Unmarked, MarkedTemp, Marked = Value
+  }
+
 }
