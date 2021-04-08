@@ -74,22 +74,9 @@ object Litmus {
     * @param events list of event
     * @return legal execution or forbidden case
     */
-  def LitmusTest(name: String, expected: LitmusTestResult.Value, p: Pipeline, events: List[Event])
+  def LitmusTest(name: String, expected: LitmusTestExpectation.Value, p: Pipeline, events: List[Event])
   : List[(String, String)] = {
-    /**
-      * Given list of rf pairs, return list of event id pairs
-      * @param l rf pairs (output of MatchingWrites)
-      * @return edges (event id pairs)
-      */
-    def GetEiidPair(l: List[(Option[Event], Event)]): List[(Eiid, Eiid)] = {
-      l match {
-        case head :: next => head match {
-          case (Some(w), r) => (w.eiid, r.eiid) :: GetEiidPair(next)
-          case _ => GetEiidPair(next)
-        }
-        case Nil => Nil
-      }
-    }
+
 
     /**
       * Given a litmus test and a particular RF candidate, generate the result for that litmus test
@@ -102,6 +89,21 @@ object Litmus {
       */
     def VerifyOneCaseForOneTest(name: String, expected: LitmusTestResult.Value, p: Pipeline, events: List[Event],
                                 rf: List[(Option[Event], Event)]): (Boolean, Int, List[(String, String)]) = {
+      /**
+        * Given list of rf pairs, return list of event id pairs
+        * @param l rf pairs (output of MatchingWrites)
+        * @return edges (event id pairs)
+        */
+      def GetEiidPair(l: List[(Option[Event], Event)]): List[(Eiid, Eiid)] = {
+        l match {
+          case head :: next => head match {
+            case (Some(w), r) => (w.eiid, r.eiid) :: GetEiidPair(next)
+            case _ => GetEiidPair(next)
+          }
+          case Nil => Nil
+        }
+      }
+
       def LitmusTestCandidateName(r: LitmusTestResult.Value, rf: List[(Eiid, Eiid)]): String = {
         def LitmusTestResultString(r: LitmusTestResult.Value) = {
           "(exp: " + { if (r == LitmusTestResult.Forbidden) "Forbidden" else "Permitted" } + ")"

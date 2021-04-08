@@ -2,13 +2,14 @@ package pipemimic
 
 import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
-import Stages._
 import GraphTree._
 import RISCTest.RISCPipeline
 import Execution.ScenariosForEvents
-import pipemimic.GlobalGraphIDUtils.{ungeid, getid}
+import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
 import pipemimic.PreservedProgramOrder.AllScenariosForPOWithAnyAddress
 import java.io._
+
+import edges.StaticEdges
 
 class StaticGraphTest extends AnyFlatSpec {
   def StaticGraph(p: Pipeline, po: List[Direction.Value]): List[String] = {

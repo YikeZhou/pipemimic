@@ -86,6 +86,11 @@ object RISCTest {
 
 class RISCTest extends AnyFlatSpec {
   "it" should "print all graphs" in {
+    val p = RISCTest.RISCPipeline(1)
+    val pr = p.verifyPreservedProgramOrderWithAnyAddresses(List(Direction.R, Direction.R))
+
+
+
     val allPPOGraphs = GraphsToVerifyTSOPPO(RISCTest.RISCPipeline(1))
     println(s"found ${allPPOGraphs.length} ppo graphs")
     val allLitmusTestGraphs = Litmus.AllLitmusTests.map(t => t (RISCTest.RISCPipeline(4)))
