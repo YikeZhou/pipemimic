@@ -18,7 +18,8 @@ object Adjacency {
 
   /* Dijkstra's algorithm */
   
-  def DijkstraStep(g: AdjacencyList, src: Int, queue: List[Int], prevs: List[Option[Int]], v: Int): (List[Int], List[Option[Int]]) = {
+  def DijkstraStep(g: AdjacencyList, src: Int, queue: List[Int], prevs: List[Option[Int]], v: Int)
+  : (List[Int], List[Option[Int]]) = {
     require(v >= 0)
     val adjacentNodes = if (v < g.length) g(v) else List.empty[Int]
     if (adjacentNodes.contains(src)) {
@@ -35,8 +36,11 @@ object Adjacency {
 
   def DijkstraAdj(g: AdjacencyList, src: Int): (List[Int], List[Option[Int]]) = {
     require(src >= 0)
+
+
     @tailrec
-    def helper(unroll: Int, g: AdjacencyList, src: Int, queue: List[Int], reachable: List[Int], prevs: List[Option[Int]]): (List[Int], List[Option[Int]]) = {
+    def helper(unroll: Int, g: AdjacencyList, src: Int, queue: List[Int], reachable: List[Int],
+               prevs: List[Option[Int]]): (List[Int], List[Option[Int]]) = {
       require(unroll >= 0)
       if (unroll == 0) {
         (reachable, prevs) /* shouldn't happen ! */
@@ -45,7 +49,11 @@ object Adjacency {
           case Nil => (reachable, prevs)
           case head :: _ =>
             val temp = DijkstraStep(g, src, queue, prevs, head)
-            helper(unroll - 1, g, src, Tail(temp._1), AddUnique(reachable, head), temp._2)
+            /* cyclic: reachable = nil, prevs = insert src v into prev(src) */
+            /* else add reachable nodes into queue and update prev vector */
+
+            helper(unroll - 1, g, src, queue= /* reachable */ Tail(temp._1), reachable = AddUnique(reachable, head),
+              /* prevs */ temp._2)
         }
       }
     }
@@ -54,6 +62,8 @@ object Adjacency {
     val r_prevs = helper(max_iters, g, src, List(src), List.empty, List.empty)
     val r = r_prevs._1
     val prevs = r_prevs._2
+
+
     val nth_prevs = if (src < prevs.length) prevs(src) else None
     nth_prevs match {
       case Some(_) => (r, prevs)
