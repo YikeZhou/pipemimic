@@ -199,10 +199,7 @@ object Litmus {
     }
 
     print(s"\nLitmus Test,${p.pipeName},$name\n")
-    val ms = new TinyTimer("LitmusTest")
-    ms.reset()
     val (b, n, r) = GenerateCandidatesThenVerify(name, expected, p, events)
-    println(ms)
     print(s"\nLitmus Test Result,$n,$b\n\n")
     r
   }

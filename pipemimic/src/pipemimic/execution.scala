@@ -236,9 +236,6 @@ object Execution extends AcyclicCheck with GlobalGraphID {
     val staticEdges = ScenarioEdges(title, p, scenario)
 
     val observedEdges = {
-      val ms = new TinyTimer("ScenarioExecutionEdges")
-      ms.reset()
-
       /* calculate all of the WS edges */
       val wsEdges: GraphTree[GlobalEvent] = {
         val edgesPerInterleaving = {
@@ -344,7 +341,6 @@ object Execution extends AcyclicCheck with GlobalGraphID {
         GraphTreeAnd(readsFromEdges.addAll(fromReadEdges).toList)
       }
 
-      println(ms)
       GraphTreeAnd(List(wsEdges, rfAndFrEdges))
     }
 

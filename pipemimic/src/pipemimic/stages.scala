@@ -560,15 +560,12 @@ object Stages {
     * @return all global edges in s
     */
   def ScenarioEdges(t: String, p: Pipeline, s: Scenario): GraphTree[GlobalEvent] = {
-    val ms = new TinyTimer("ScenarioEdges")
-    ms.reset() /* start timer */
     val result = GraphTreeLeaf(t,
       ScenarioIntraLocationGlobalEdges(s, p) :::
       ScenarioIntraEventGlobalEdges(s) :::
       ScenarioPipelineSpecialEdges(s, p) :::
       ScenarioPathSpecialEdges(s)
     )
-    println(ms) /* stop timer */
     result
   }
 }

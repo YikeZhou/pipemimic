@@ -176,21 +176,6 @@ object CartesianUtils {
   }
 }
 
-class TinyTimer(name: String) {
-  var start: Long = _
-  var init = false
-
-  def reset(): Unit = {
-    init = true
-    start = System.nanoTime()
-  }
-
-  override def toString: String = {
-    val timeElapsed = (System.nanoTime() - start) / 1000000
-    if (init) s"Timer<$name>: $timeElapsed ms" else "Error: not initialized"
-  }
-}
-
 object GlobalGraphIDUtils {
   def geid(p: Pipeline, ge: GlobalEvent): Int = {
     ge match {
@@ -377,8 +362,6 @@ object Dot {
     * @return graph described in dot grammar
     */
   def DotGraph(name: String, lNormal: List[(Int, Int, String)], fStageEvent: Int => (Int, Int), fString: Int => String, lBold: List[Int], lThick: List[(Int, Int)], pMax: Int): String = {
-    val ms = new TinyTimer("dot_graph")
-    ms.reset()
     val fStage: Int => Int = fStageEvent(_)._1
     val fEvent: Int => Int = fStageEvent(_)._2
     val lNodes = EdgeListToNodeList(lNormal, fStageEvent, Nil)
@@ -391,7 +374,6 @@ object Dot {
       newrank=true;
       ${SubgraphClusters(fString, lBold, lSameEvent)}${ranks(fString, lBold, lRanked)}${unranked(fString, lBold, lUnranked)}${EdgeStrings(fString, fStageEvent, lNormal, lThick)}}
       """
-    println(ms)
     result
   }
 }
