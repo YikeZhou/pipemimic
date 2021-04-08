@@ -24,10 +24,11 @@ package object pipemimic {
     val R, W = Value
   }
 
-  /** an access specified by polarity + location + value */
   sealed abstract class Action
-  /** memory access */
-  case class Access(d: Direction.Value, l: Address, v: Value) extends Action
+  /** individual reads and writes to memory */
+  case class Access(direction: Direction.Value, address: Address, value: Value) extends Action
+  /** memory barrier events: fence rw,rw (FenceTSO) */
+  case class MemoryFence() extends Action
 
   /**
     * Each instance of an instruction in a program execution may
@@ -40,19 +41,29 @@ package object pipemimic {
     * @param action the associated action
     */
   case class Event(eiid: Eiid, iiid: Iiid, action: Action) {
-    def dirn: Direction.Value = {
+    def dirn: Option[Direction.Value] = {
       this.action match {
-        case Access(d, _, _) => d
+        case Access(d, _, _) => Some(d)
+        case MemoryFence() => None
       }
     }
 
-    def loc: Address = {
+    def addr: Option[Location] = {
       this.action match {
-        case Access(_, l, _) => l
+        case Access(_, addr, _) => Some(addr)
+        case MemoryFence() => None
       }
     }
 
-    def isWrite: Boolean = this.dirn == Direction.W
+    def isWrite: Boolean = {
+      val direction = this.dirn
+      direction.isDefined && direction.get == Direction.W
+    }
+
+    def isRead: Boolean = {
+      val direction = this.dirn
+      direction.isDefined && direction.get == Direction.R
+    }
   }
 
   /* Methods added to basic collections class */

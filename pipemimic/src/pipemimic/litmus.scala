@@ -3,6 +3,7 @@ package pipemimic
 import Execution.GraphsToVerifyExecution
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 object LitmusTestResult extends Enumeration {
   val Forbidden, Permitted = Value
@@ -53,6 +54,7 @@ object Litmus {
           case (Direction.R, Direction.W, true, true) => (Some(w), r) :: MatchingWrites(r, t)
           case _ => MatchingWrites(r, t)
         }
+        case _ => MatchingWrites(r, t)
       }
       case Nil => r.action match {
         // FIXME why value must be 0 ? what's the meaning of read's value ? => initial value
@@ -128,18 +130,25 @@ object Litmus {
       * @param n number of FIXME what?
       * @return legal execution or forbidden cases
       */
-    @tailrec
     def VerifyAllCasesForOneTest(name: String, expected: LitmusTestResult.Value, p: Pipeline,
-                                 events: List[Event], rfs: List[List[(Option[Event], Event)]],
-                                 lr: List[(String, String)], n: Int): (Boolean, Int, List[(String, String)]) = {
-      rfs match {
-        case head :: next => VerifyOneCaseForOneTest(name, expected, p, events, head) /* check one case in rf list */ match {
-          case (true, _n, r) => (true, n + _n, r) /* find a legal execution */
-          case (false, _n, r) => VerifyAllCasesForOneTest(name, expected, p, events, next, lr ::: r, n + _n) /* execute
-          following candidates while append r (GraphOfExecutionVerificationResult) to lr and add _n to n */
+                                 events: List[Event], rfs: List[List[(Option[Event], Event)]])
+                                 : (Boolean, Int, List[(String, String)]) = {
+      var checkedCases = 0
+      val results = ListBuffer.empty[(String, String)]
+
+      for (rf <- rfs) {
+        /* check one case in rf list */
+        val (observable, count, r) = VerifyOneCaseForOneTest(name, expected, p, events, rf)
+        if (observable) {
+          /* find a legal execution */
+          return (true, checkedCases + count, r)
+        } else {
+          /* execute following candidates while append r (GraphOfExecutionVerificationResult) to lr and add _n to n */
+          results ++= r
+          checkedCases += count
         }
-        case Nil => (false, n, lr)
       }
+      (false, checkedCases, results.toList)
     }
 
     /**
@@ -169,7 +178,8 @@ object Litmus {
       }
 
       /* separate read and write events */
-      val (writes, reads) = events.partition(_.isWrite)
+      val writes = events.filter(_.isWrite)
+      val reads = events.filter(_.isRead)
       /* for each read event, find its matching write events in all write events */
       val rfCandidates = reads.map(r => MatchingWrites(r, _)).map(f => f(writes))
       println(StringOfRFCandidates(rfCandidates))
@@ -185,7 +195,7 @@ object Litmus {
         */
       val rf = CartesianProduct(rfCandidates)
       println(StringOfRFCandidates(rf))
-      VerifyAllCasesForOneTest(name, expected, p, events, rf, Nil, 0)
+      VerifyAllCasesForOneTest(name, expected, p, events, rf)
     }
 
     print(s"\nLitmus Test,${p.pipeName},$name\n")

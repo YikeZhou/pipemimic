@@ -4,6 +4,7 @@ import pipemimic.Dot.DotGraph
 import pipemimic.Stages._
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 object Execution extends AcyclicCheck with GlobalGraphID {
 
@@ -133,9 +134,9 @@ object Execution extends AcyclicCheck with GlobalGraphID {
     }
   }
 
-  def VertexHasSameAddress(s: Scenario, addr: Address, e: GlobalEvent): Boolean = {
-    s.lift(e._2) match {
-      case Some(po) => po.evt.loc == addr
+  def VertexHasSameAddress(s: Scenario, l: Option[Location], e: GlobalEvent): Boolean = {
+    NthError(s, e._2) match {
+      case Some(po) => po.evt.loc == l
       case None => false
     }
   }
@@ -154,8 +155,8 @@ object Execution extends AcyclicCheck with GlobalGraphID {
     }
   }
 
-  def WritesToSameLocation(addr: Address, s: Scenario): List[PathOption] = {
-    s.filter(x => if (x.evt.dirn == Direction.R) false else addr == x.evt.loc)
+  def WritesToSameLocation(l: Option[Location], s: Scenario): List[PathOption] = {
+    s.filter(x => if (x.evt.dirn.contains(Direction.R)) false else x.evt.loc == l)
   }
 
   def ExecutionEdgeLabel(n: String, l: List[(GlobalEvent, GlobalEvent, String)]): String = {
@@ -165,124 +166,6 @@ object Execution extends AcyclicCheck with GlobalGraphID {
         val e2 = head._2._2
         s"($e1-$n->$e2) ${ExecutionEdgeLabel(n, next)}"
       case Nil => ""
-    }
-  }
-
-  def ExecutionOrderEdges_FR_initial(p: Pipeline, src: PathOption, gUhb: GraphTree[GlobalEvent], dst: PathOption)
-  : GraphTree[GlobalEvent] = {
-    def helper(p: Pipeline, es: Eiid, ed: Eiid, ll: (Stages.Location, Stages.Location)): GraphTree[GlobalEvent] = {
-      val (ls, ld) = ll
-      val s = (ls, es)
-      val d = (ld, ed)
-      val l = List((s, d, "FRi"))
-      def PrintPossibility: GraphTree[GlobalEvent] => String = t => t.toString(GlobalEventString(p, _)) + '\n'
-      GraphTreeLeaf(ExecutionEdgeLabel("fr", l), l)
-    }
-
-    GraphTreeAnd(gUhb :: FRInitialPerformPairs(src, dst).map(helper(p, src.evt.eiid, dst.evt.eiid, _)))
-  }
-
-  def ScenarioExecutionEdges_FR_initial(p: Pipeline, s: Scenario, gUhb: GraphTree[GlobalEvent], e: Eiid)
-  : GraphTree[GlobalEvent] = {
-    pathOfEvent(s, e) match {
-      case Some(pr) =>
-        /* Found PathOptions for r */ WritesToSameLocation(pr.evt.loc, s).foldLeft(gUhb)((b, po) =>
-        ExecutionOrderEdges_FR_initial(p, pr, b, po))
-      case None => sys.error("ScenarioExecutionEdges_FR_initial: event is not actually in scenario")
-    }
-  }
-
-  /**
-    * Given a uhb RF edge (w, r), for all vertices w' in [g_uhb] such that (w, w') is an edge in [g_uhb] between events
-    * at the same location, add the FR edge (r, w').
-    * @param p pipeline
-    * @param s scenario
-    * @param w write event
-    * @param r read event
-    * @param gUhb uhb graph
-    * @return graph added FR edge
-    */
-  def ExecutionOrderEdges_FR_fromwrite(p: Pipeline, s: Scenario, w: GlobalEvent, r: GlobalEvent,
-                                       gUhb: GraphTree[GlobalEvent]): GraphTree[GlobalEvent] = {
-    def ___helper(s: Scenario, l: List[Eiid]): List[PathOption] = {
-      l match {
-        case head :: next => pathOfEvent(s, head) match {
-          case Some(p) => p :: ___helper(s, next)
-          case None =>         ___helper(s, next)
-        }
-        case Nil => Nil
-      }
-    }
-
-    def __helper(r: PathOption, w: PathOption): List[(GlobalEvent, GlobalEvent, String)] = {
-      FRfwPerformPairs(r, w).map(p => ((p._1, r.evt.eiid), (p._2, w.evt.eiid), "FRfw"))
-    }
-
-    def _helper(p: Pipeline, s: Scenario, w: GlobalEvent, r: GlobalEvent,
-                nl: (String, List[(GlobalEvent, GlobalEvent, String)]))
-    : (String, List[(GlobalEvent, GlobalEvent, String)]) = {
-      val (n, l) = nl
-      val wReachable = ReachableVerticesAtSameLocation(p, s, w, l)
-      val _wReachable = ___helper(s, wReachable)
-      pathOfEvent(s, r._2) match {
-        case Some(p) =>
-          val _l = _wReachable.flatMap(__helper(p, _))
-          (n, l ::: _l)
-        case None => nl
-      }
-    }
-
-    GraphTree(gUhb.flatten.map(_helper(p, s, w, r, _)))
-  }
-
-  /**
-    * Given a source and destination event for an architectural RF edge, create the corresponding uhb edge(s)
-    * @param p pipeline
-    * @param s scenario
-    * @param gUhb uhb graph
-    * @param src source path
-    * @param dst destination path
-    * @return graph
-    */
-  def ExecutionOrderEdges_RFandFR_fromwrite(p: Pipeline, s: Scenario, gUhb: GraphTree[GlobalEvent],
-                                            src: PathOption, dst: PathOption): GraphTree[GlobalEvent] = {
-    /**
-      * Given a source and destination event for a particular uhb interpretation of an RF edge, create the corresponding
-      * uhb edge(s)
-      * @param p pipeline
-      * @param s scenario
-      * @param gUhb uhb graph
-      * @param es event source
-      * @param ed event destination
-      * @param ll location tuple
-      * @return graph
-      */
-    def helper(p: Pipeline, s: Scenario, gUhb: GraphTree[GlobalEvent], es: Eiid, ed: Eiid,
-               ll: (Stages.Location, Stages.Location)): GraphTree[GlobalEvent] = {
-      val (ls, ld) = ll
-      val src = (ls, es)
-      val dst = (ld, ed)
-      val l = List((src, dst, "RF"))
-      def PrintPossibility: GraphTree[GlobalEvent] => String = t => t.toString(GlobalEventString(p, _)) + '\n'
-      println(PrintPossibility(GraphTreeLeaf("rf_uhb", l)))
-      GraphTreeAnd(List(
-        ExecutionOrderEdges_FR_fromwrite(p, s, src, dst, gUhb),
-        GraphTreeLeaf(ExecutionEdgeLabel("rf", l), l)
-      ))
-    }
-
-    val rfPossibilities = RFPerformPairs(src, dst).map(helper(p, s, gUhb, src.evt.eiid, dst.evt.eiid, _))
-    println(s"Source path ${src.optionName}, Dest path ${dst.optionName}\n")
-    println(s"Architectural RF edge: ${rfPossibilities.length} uhb candidates\n")
-    GraphTreeOr(rfPossibilities)
-  }
-
-  def ScenarioExecutionEdges_RF_fromwrite(p: Pipeline, s: Scenario, gUhb: GraphTree[GlobalEvent],
-                                          rf: (Eiid, Eiid)): GraphTree[GlobalEvent] = {
-    val (w, r) = rf
-    (pathOfEvent(s, w), pathOfEvent(s, r)) match {
-      case (Some(pw), Some(pr)) => ExecutionOrderEdges_RFandFR_fromwrite(p, s, gUhb, pw, pr)
-      case _ => sys.error("ScenarioExecutionEdges_RF_fromwrite: event not in scenario")
     }
   }
 
@@ -300,18 +183,12 @@ object Execution extends AcyclicCheck with GlobalGraphID {
     val edgeDests = rfFromWrite.map(_._2) /* read event */
     events match {
       case head :: next => (edgeDests.contains(head.eiid), head.dirn) match {
-        case (false, Direction.R) => /* head: read event from init */ head.eiid :: ReadsFromInitial(next, rfFromWrite)
+        case (false, Some(Direction.R)) => /* head: read event from init */ head.eiid :: ReadsFromInitial(next,
+          rfFromWrite)
         case _ => ReadsFromInitial(next, rfFromWrite)
       }
       case Nil => Nil
     }
-  }
-
-  def ScenarioExecutionEdges_RF(p: Pipeline, gUhb: GraphTree[GlobalEvent], s: Scenario,
-                                rfFromWrite: List[(Eiid, Eiid)]): GraphTree[GlobalEvent] = {
-    val rfInitialReads = ReadsFromInitial(s.map(_.evt), rfFromWrite)
-    val gAfterRf = rfFromWrite.foldLeft(gUhb)((b, ee) => ScenarioExecutionEdges_RF_fromwrite(p, s, b, ee))
-    rfInitialReads.foldLeft(gAfterRf)((g, e) => ScenarioExecutionEdges_FR_initial(p, s, g, e))
   }
 
   /* ScenarioExecutionEdges_WS */
@@ -344,104 +221,134 @@ object Execution extends AcyclicCheck with GlobalGraphID {
   def ScenarioExecutionEdges_WS_SortByLoc(s: Scenario): List[List[PathOption]] = {
     s match {
       case head :: next => (head.evt.dirn, head.evt.loc) match {
-        case (Direction.W, l) => ScenarioExecutionEdges_WS_SortByLoc(next).appendToNth(l, head)
+        case (Some(Direction.W), Some(l)) => AppendToNth(ScenarioExecutionEdges_WS_SortByLoc(next), l, head)
         case _ => ScenarioExecutionEdges_WS_SortByLoc(next)
       }
       case Nil => Nil
     }
   }
 
-  def ScenarioExecutionEdges_WS_SortByLocThenCore(s: Scenario): List[List[List[GlobalEvent]]] = {
-    ScenarioExecutionEdges_WS_SortByLoc(s).map(ScenarioExecutionEdges_WS_SortByCore)
-  }
-
-  def ScenarioExecutionEdges_WS_Interleavings(s: Scenario): List[List[List[GlobalEvent]]] = {
-    /* Return a list of all possible sequential interleavings of the input lists */
-    def Interleave[T](l: List[List[T]]): List[List[T]] = {
-
-      def helper0[A](l1: List[List[A]], l2: List[List[A]]): List[(A, List[List[A]])] = {
-        l2 match {
-          case head2 :: next2 =>
-            head2 match {
-              case head :: next => (head, l1 ++ (next :: next2)) :: helper0(l1.appended(head2), next2)
-              case Nil => helper0(l1, next2)
-            }
-          case Nil => Nil
-        }
-      }
-
-      def helper1[B](a: B, l: List[List[B]]): List[List[B]] = {
-        l match {
-          case Nil => List(List(a))
-          case _ => l.map(x => a :: x)
-        }
-      }
-
-      def helper2[C](l: List[List[C]], n: Int): List[List[C]] = {
-        require(n >= 0)
-
-        if (n > 0) {
-          helper0(List(), l).map(p => helper1(p._1, helper2(p._2, n - 1))).foldLeft(List.empty[List[C]])( _ ++ _ )
-        } else Nil
-      }
-
-      val n = l.map(_.length).sum
-      helper2(l, n)
-    }
-
-    ScenarioExecutionEdges_WS_SortByLocThenCore(s).map(Interleave)
-  }
-
-  def ScenarioExecutionEdges_WS_EdgesPerInterleaving(s: Scenario)
-  : List[List[List[(GlobalEvent, GlobalEvent, String)]]] = {
-    val i = ScenarioExecutionEdges_WS_Interleavings(s)
-    i.map(_.map(_.pairConsecutive("WS")))
-  }
-
-  def ScenarioExecutionEdges_WS_EdgesPerLocation(l: List[List[(GlobalEvent, GlobalEvent, String)]])
-  : GraphTree[GlobalEvent] = {
-    val MakeLeaf: List[(GlobalEvent, GlobalEvent, String)] =>
-      GraphTreeLeaf[GlobalEvent] = l =>
-      GraphTreeLeaf(ExecutionEdgeLabel("ws", l), l)
-    val _l = l.map(MakeLeaf)
-    println(s"WS @ location: ${_l.length} candidates\n")
-    GraphTreeOr(_l)
-  }
-
-  def ScenarioExecutionEdges_WS(s: Scenario): GraphTree[GlobalEvent] = {
-    val l = ScenarioExecutionEdges_WS_EdgesPerInterleaving(s)
-    GraphTreeAnd(l.map(ScenarioExecutionEdges_WS_EdgesPerLocation))
-  }
-
-  def ScenarioExecutionEdges(p: Pipeline, s: Scenario, rf: List[(Eiid, Eiid)], gUhb: GraphTree[GlobalEvent])
-  : GraphTree[GlobalEvent] = {
-    val ms = new TinyTimer("ScenarioExecutionEdges")
-    ms.reset()
-
-    val _g = GraphTreeAnd(List(gUhb, ScenarioExecutionEdges_WS(s)))
-    val result = ScenarioExecutionEdges_RF(p, _g, s, rf)
-    println(ms)
-    result
-  }
-
   /* Verification */
 
-  def GraphForScenarioAcyclic(t: String, s: Scenario, p: Pipeline, rf: List[(Eiid, Eiid)]): GraphTree[GlobalEvent] = {
-    val e = ScenarioEdges(t, p, s)
-    ScenarioExecutionEdges(p, s, rf, e)
-  }
-
-  def GraphCheckIfAcyclic(p: Pipeline, g: GraphTree[GlobalEvent]): (List[(String, MHBResult)], Boolean, Int) = {
-    TreeAcyclicInSomeGraph(getid(p, g))
-  }
-
-  def VerifyExecutionScenario(p: Pipeline, s: (String, Scenario), rf: List[(Eiid, Eiid)])
+  def VerifyExecutionScenario(p: Pipeline, scenarioWithTitle: (String, Scenario), rf: List[(Eiid, Eiid)])
   : (List[(String, MHBResult)], Boolean, Int) = {
-    def ScenarioCheckAcyclic(t: String, s: Scenario, p: Pipeline, rf: List[(Eiid, Eiid)])
-    : (List[(String, MHBResult)], Boolean, Int) = {
-      GraphCheckIfAcyclic(p, GraphForScenarioAcyclic(t, s, p, rf))
+    val (title, scenario) = scenarioWithTitle
+    val staticEdges = ScenarioEdges(title, p, scenario)
+
+    val observedEdges = {
+      val ms = new TinyTimer("ScenarioExecutionEdges")
+      ms.reset()
+
+      /* calculate all of the WS edges */
+      val wsEdges: GraphTree[GlobalEvent] = {
+        val edgesPerInterleaving = {
+          val sortedByLocation = ScenarioExecutionEdges_WS_SortByLoc(scenario)
+          val writeEventsSortByLocThenCore = sortedByLocation.map(ScenarioExecutionEdges_WS_SortByCore)
+          /* element in wsCandidateForEachLocation : all possibilities of write serialization for location 0~n */
+          val wsCandidateForEachLocation = writeEventsSortByLocThenCore.map(Interleave)
+          /* for each possible case, generate a edge list */
+          /* when there is only 1 write op at location, no ws edge will be generated */
+          wsCandidateForEachLocation.map(_.map(PairConsecutiveWithLabel[GlobalEvent]("WS", _)))
+        }
+        /* turn list of global edges into a graph tree */
+        val rawGraph = GraphTreeAnd(edgesPerInterleaving.map { wsCandidatesAtLocation =>
+          val wsPossibilities = wsCandidatesAtLocation map { candidate =>
+            /* one possible write serialization */
+            GraphTreeLeaf(ExecutionEdgeLabel("ws", candidate), candidate)
+          }
+          println(s"WS @ location: ${wsPossibilities.length} candidates\n")
+          GraphTreeOr(wsPossibilities)
+        })
+        GraphTreeSimplify(rawGraph)
+      }
+
+
+      val rfAndFrEdges: GraphTree[GlobalEvent] = {
+        /* add rf edges */
+        val readsFromEdges = ListBuffer.empty[GraphTree[GlobalEvent]]
+        for (readsFrom <- rf) {
+          readsFromEdges += {
+            val (write, read) = readsFrom /* eiid of write and read events */
+            (pathOfEvent(scenario, write), pathOfEvent(scenario, read)) match {
+              case (Some(pathOfWrite), Some(pathOfRead)) =>
+                /* given path of read event and write event, return rf edges and fr edges if exists */
+
+                /* one rf pair may correspond multiple edges */
+                val rfPossibilities = {
+                  val performLocationPairs = RFPerformPairs(pathOfWrite, pathOfRead)
+                  performLocationPairs map { case (writePerformLocation, readPerformLocation) =>
+                    val writeGlobalEvent = (writePerformLocation, write)
+                    val readGlobalEvent = (readPerformLocation, read)
+                    val e = (writeGlobalEvent, readGlobalEvent, "RF") /* one rf edge */
+                    val le = List(e)
+                    /* output a edge */
+                    def PrintPossibility: GraphTree[GlobalEvent] => String =
+                      t => DNFStringOfTree(GlobalEventString(p, _), t) + '\n'
+                    println(PrintPossibility(GraphTreeLeaf("rf_uhb", le)))
+                    /* check if exists fr edge */
+                    val fr = {
+                      /* given a RF edge (w, r), for all vertices w' in uhb graph such that (w, w') is an edge
+                      between events at the same location, add the fr edge (r, w') */
+                      val allWSEdges = DNFOfTree(wsEdges)
+                      val frEdges = allWSEdges map { case (wsName, wsCandidate) =>
+                        val reachableWrite = ReachableVerticesAtSameLocation(p, scenario, writeGlobalEvent, wsCandidate)
+                        val pathOfReachableWrite = reachableWrite.map(pathOfEvent(scenario, _))
+                          .filter(_.isDefined).map{ case Some(p) => p }
+                        (
+                          wsName,
+                          pathOfReachableWrite.flatMap(w => FRfwPerformPairs(pathOfRead, w).map { case (rLoc, wLoc) =>
+                            ((rLoc, read), (wLoc, w.evt.eiid), "FRfw") /* fr edge */
+                          })
+                        )
+                      }
+                      TreeOfDNF(frEdges)
+                    }
+                    GraphTreeAnd(List(fr, GraphTreeLeaf(ExecutionEdgeLabel("rf", le), le)))
+                  }
+                }
+                println(s"Source path ${pathOfWrite.optionName}, Dest path ${pathOfRead.optionName}\n")
+                println(s"Architectural RF edge: ${rfPossibilities.length} uhb candidates\n")
+                GraphTreeOr(rfPossibilities)
+
+              case _ => sys.error("ScenarioExecutionEdges_RF_fromwrite: event not in scenario")
+            }
+          }
+        }
+        /* add fr edges */
+        val fromReadEdges = ListBuffer.empty[GraphTree[GlobalEvent]]
+        val rfInitialReads = ReadsFromInitial(scenario.map(_.evt), rf) // FIXME: add initial values in litmus tests
+        for (readsFromInitValue <- rfInitialReads) {
+          /* given event readsFromInitValue, return corresponding fr edge */
+          pathOfEvent(scenario, readsFromInitValue) match {
+            case Some(pathOfReadFromInitial) =>
+              /* find write event to same location */
+              val writeEventToSameAddress = WritesToSameLocation(pathOfReadFromInitial.evt.loc, scenario)
+              writeEventToSameAddress foreach { pathOfWrite => /* readsFromInit -fr-> write */
+                FRInitialPerformPairs(pathOfReadFromInitial, pathOfWrite) map { case (rLoc, wLoc) =>
+                  /* add all fr edge into list buffer fromReadEdges */
+                  val readGlobalEvent = (rLoc, pathOfReadFromInitial.evt.eiid)
+                  val writeGlobalEvent = (wLoc, pathOfWrite.evt.eiid)
+                  val e = (readGlobalEvent, writeGlobalEvent, "FRi")
+                  val le = List(e)
+                  def PrintPossibility: GraphTree[GlobalEvent] => String =
+                    t => DNFStringOfTree(GlobalEventString(p, _), t) + '\n'
+                  println(PrintPossibility(GraphTreeLeaf("fr_uhb", le)))
+                  fromReadEdges += GraphTreeLeaf(ExecutionEdgeLabel("fr", le), le)
+                }
+              }
+            case None =>
+              sys.error("ScenarioExecutionEdges_FR_initial: event is not actually in scenario")
+          }
+        }
+
+        GraphTreeAnd(readsFromEdges.addAll(fromReadEdges).toList)
+      }
+
+      println(ms)
+      GraphTreeAnd(List(wsEdges, rfAndFrEdges))
     }
-    ScenarioCheckAcyclic(s._1, s._2, p, rf)
+
+    TreeAcyclicInSomeGraph(/* global event -> int value */getid(p, GraphTreeAnd(List(staticEdges, observedEdges))))
   }
 
   /**
@@ -474,31 +381,22 @@ object Execution extends AcyclicCheck with GlobalGraphID {
     */
   def VerifyExecution(p: Pipeline, events: List[Event], rf: List[(Eiid, Eiid)])
   : (Boolean, Int, List[(String, MHBResult)]) = {
-    /**
-      * Compared to function [[VerifyExecution]], add parameters ls, lr and n.
-      * @param p pipeline
-      * @param events list of events
-      * @param rf list of reads from edges
-      * @param ls list of scenarios
-      * @param lr list of results (filled in during recurrence)
-      * @param n counter:
-      * @return
-      */
-    @tailrec
-    def helper(p: Pipeline, events: List[Event], rf: List[(Eiid, Eiid)],
-               ls: List[(String, Scenario)], lr: List[(String, MHBResult)], n: Int)
-    : (Boolean, Int, List[(String, MHBResult)]) = {
-      ls match {
-        case head :: next =>
-          val (r, b, _n) = VerifyExecutionScenario(p, head, rf)
-          if (b) (true, n + _n, r) else helper(p, events, rf, next, lr ::: r, n + _n)
-        case Nil => (false, n, lr) /* TRUE cases not found */
-      }
-    }
-
     val scenarios = ScenariosForEvents(p, events) /* all combinations of events' path */
     println(s"Found ${scenarios.length} scenarios\n")
-    helper(p, events, rf, scenarios, Nil, 0)
+
+    var checkedCases = 0
+    val results = ListBuffer.empty[(String, MHBResult)]
+
+    for (scenario <- scenarios) {
+      val (mhb, observable, count) = VerifyExecutionScenario(p, scenario, rf)
+      if (observable) {
+        return (true, count + checkedCases, mhb)
+      } else {
+        checkedCases += count
+        results ++= mhb
+      }
+    }
+    (false, checkedCases, results.toList)
   }
 
   def GraphOfExecutionVerificationResult(title: String, p: Pipeline, nr: (String, MHBResult)): (String, String) = {

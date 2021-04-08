@@ -6,6 +6,7 @@ import java.io._
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 object RISCTest {
   val FIFO: LocalReordering = _ => ordering => ordering
