@@ -56,6 +56,7 @@ object GraphTree {
     * @return simplified GraphTree
     */
   def GraphTreeSimplify[T](g: GraphTree[T]): GraphTree[T] = {
+    // TODO optimize simplification algorithm
     g match {
       case GraphTreeOr(List(x)) => GraphTreeSimplify(x)
       case GraphTreeOr(l) => GraphTreeOr(l.map(GraphTreeSimplify))
