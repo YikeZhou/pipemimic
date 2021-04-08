@@ -1,6 +1,7 @@
 package pipemimic
 
 import Execution.GraphsToVerifyExecution
+import Stages.Pipeline
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -126,8 +127,6 @@ object Litmus {
       * @param p pipeline
       * @param events list of event
       * @param rfs rf edge candidates
-      * @param lr list of verification results
-      * @param n number of FIXME what?
       * @return legal execution or forbidden cases
       */
     def VerifyAllCasesForOneTest(name: String, expected: LitmusTestResult.Value, p: Pipeline,

@@ -82,18 +82,18 @@ object RISCTest {
     val c = e.iiid.proc
     e.dirn match {
       case Some(Direction.R) => List(
-        PathOption(s"Read${e.loc.get}", e,
+        PathOption(s"Read${e.addr.get}", e,
           StagesOfCore(c, (0 to 4).toList),
           List(PerformStages(3 + 6 * c, (0 until n).toList, (0 until n).toList, None, isMainMemory = true)),
           NoSpecialEdges),
-        PathOption(s"STBFwd${e.loc.get}", e,
+        PathOption(s"STBFwd${e.addr.get}", e,
           StagesOfCore(c, (0 to 4).toList),
           List(PerformStages(3 + 6 * c, (0 until n).toList, List(c), None, isMainMemory = false)),
           NoSpecialEdges)
       )
       case Some(Direction.W) => List(
         PathOption(
-          optionName = s"Write${e.loc.get}",
+          optionName = s"Write${e.addr.get}",
           evt = e,
           path = StagesOfCore(c, (0 to 5).toList) ::: StagesOfCore(n, List(0, 1)),
           performStages = List(

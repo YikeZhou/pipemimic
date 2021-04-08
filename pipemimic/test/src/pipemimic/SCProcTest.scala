@@ -4,6 +4,7 @@ import java.io._
 
 import org.scalatest.flatspec.AnyFlatSpec
 import pipemimic.PreservedProgramOrder.GraphsToVerifyTSOPPO
+import Stages._
 
 /** Traditional Five-Stage SCProc Pipeline */
 object SCProcTest {
@@ -57,7 +58,7 @@ object SCProcTest {
     e.dirn match {
       case Direction.R => List(
         PathOption(
-          optionName = s"Read${e.loc}",
+          optionName = s"Read${e.addr}",
           evt = e,
           path = StagesOfCore(c, (0 to 4).toList),
           performStages = List(
@@ -68,7 +69,7 @@ object SCProcTest {
       )
       case Direction.W => List(
         PathOption(
-          optionName = s"Write${e.loc}",
+          optionName = s"Write${e.addr}",
           evt = e,
           path = StagesOfCore(c, (0 to 4).toList),
           performStages = List(

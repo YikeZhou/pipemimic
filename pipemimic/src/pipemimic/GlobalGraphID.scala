@@ -2,6 +2,8 @@ package pipemimic
 
 import scala.annotation.tailrec
 
+import Stages._
+
 trait GlobalGraphID {
   def geid(p: Pipeline, ge: GlobalEvent): Int = {
     ge match {

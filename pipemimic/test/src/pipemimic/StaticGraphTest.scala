@@ -37,7 +37,7 @@ class StaticGraphTest extends AnyFlatSpec {
     val s = scenarios.head
     println(s"Scenario Title: ${s._1}")
     val graphRef = ScenarioEdges("PPO", pipeline, s._2) /* static edges ? */
-    val graph = StaticEdges.scenarioStaticEdges("PPO", pipeline, s._2)
+    val graph = Stages.ScenarioEdges("PPO", pipeline, s._2)
     println(graph)
     val raw = getid(pipeline, graph)
     val rawRef = getid(pipeline, graphRef)

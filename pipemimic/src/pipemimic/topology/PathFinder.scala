@@ -10,6 +10,7 @@ class PathFinder(g: AdjacencyList, src: Node) {
   private var maxIteration = g.map(_.length).sum + g.length
 
   private val queue = mutable.Queue.empty[Node]
+  queue.enqueue(src)
   /* save reachable nodes from src */
   private val allReachableNodesFromSrc = mutable.Set.empty[Node]
   /* prev nodes */
@@ -58,10 +59,10 @@ class PathFinder(g: AdjacencyList, src: Node) {
 
   def findPath(dst: Node): List[Node] = {
     var maxIter = nodeCnt
-    val path = mutable.ListBuffer.empty[Node]
+    val path = mutable.Stack.empty[Node]
 
     var curNode = dst
-    path += curNode
+    path.push(dst)
 
     breakable {
       while (prev(curNode).isDefined) {
@@ -69,15 +70,17 @@ class PathFinder(g: AdjacencyList, src: Node) {
           break
 
         curNode = prev(curNode).get
-        path += curNode
+        path.push(curNode)
+        if (curNode == src)
+          break
         maxIter -= 1
       }
     }
 
-    if (path.lastOption.isEmpty || path.lastOption.get != src)
+    if (path.headOption.isEmpty || path.headOption.get != src)
       Nil /* no path from src to dst */
     else
-      path.reverse.toList /* return list of nodes from src to dst */
+      path.toList /* return list of nodes from src to dst */
   }
 }
 
@@ -88,12 +91,4 @@ object PathFinder {
     val pathFinder = new PathFinder(g, src)
     pathFinder.findPath(dst)
   }
-}
-
-object PathFinderTest extends App {
-  val cycle = List(
-    (0, 1), (1, 2), (2, 0), (1, 3), (2, 3)
-  )
-  val pathFinder = PathFinder(cycle, 0)
-
 }

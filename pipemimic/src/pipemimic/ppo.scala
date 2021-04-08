@@ -4,7 +4,6 @@ import pipemimic.Bell.BellNumber
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
 import pipemimic.Stages._
-import MustHappenBefore._
 
 import scala.annotation.tailrec
 

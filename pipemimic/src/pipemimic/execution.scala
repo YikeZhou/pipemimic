@@ -2,6 +2,9 @@ package pipemimic
 
 import pipemimic.Dot.DotGraph
 import pipemimic.Stages._
+import ListUtils._
+import Interleavings.Interleave
+import pipemimic.MustHappenBefore.TreeAcyclicInSomeGraph
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -136,7 +139,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
 
   def VertexHasSameAddress(s: Scenario, l: Option[Location], e: GlobalEvent): Boolean = {
     NthError(s, e._2) match {
-      case Some(po) => po.evt.loc == l
+      case Some(po) => po.evt.addr == l
       case None => false
     }
   }
@@ -145,7 +148,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
                                       g: List[(GlobalEvent, GlobalEvent, String)]): List[Eiid] = {
     s.lift(src._2) match {
       case Some(po) => ReachableVertices(p, src, g)
-                        .filter(VertexHasSameAddress(s, po.evt.loc, _))
+                        .filter(VertexHasSameAddress(s, po.evt.addr, _))
                         .filter(nthEventInScenarioIsWrite(s, _))
                         .map(_._2)
                         .toSet
@@ -156,7 +159,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
   }
 
   def WritesToSameLocation(l: Option[Location], s: Scenario): List[PathOption] = {
-    s.filter(x => if (x.evt.dirn.contains(Direction.R)) false else x.evt.loc == l)
+    s.filter(x => if (x.evt.dirn.contains(Direction.R)) false else x.evt.addr == l)
   }
 
   def ExecutionEdgeLabel(n: String, l: List[(GlobalEvent, GlobalEvent, String)]): String = {
@@ -220,7 +223,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
 
   def ScenarioExecutionEdges_WS_SortByLoc(s: Scenario): List[List[PathOption]] = {
     s match {
-      case head :: next => (head.evt.dirn, head.evt.loc) match {
+      case head :: next => (head.evt.dirn, head.evt.addr) match {
         case (Some(Direction.W), Some(l)) => AppendToNth(ScenarioExecutionEdges_WS_SortByLoc(next), l, head)
         case _ => ScenarioExecutionEdges_WS_SortByLoc(next)
       }
@@ -256,7 +259,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
           println(s"WS @ location: ${wsPossibilities.length} candidates\n")
           GraphTreeOr(wsPossibilities)
         })
-        GraphTreeSimplify(rawGraph)
+        rawGraph // FIXME
       }
 
 
@@ -280,13 +283,13 @@ object Execution extends AcyclicCheck with GlobalGraphID {
                     val le = List(e)
                     /* output a edge */
                     def PrintPossibility: GraphTree[GlobalEvent] => String =
-                      t => DNFStringOfTree(GlobalEventString(p, _), t) + '\n'
+                      t => t.toString(GlobalEventString(p, _)) + '\n'
                     println(PrintPossibility(GraphTreeLeaf("rf_uhb", le)))
                     /* check if exists fr edge */
                     val fr = {
                       /* given a RF edge (w, r), for all vertices w' in uhb graph such that (w, w') is an edge
                       between events at the same location, add the fr edge (r, w') */
-                      val allWSEdges = DNFOfTree(wsEdges)
+                      val allWSEdges = wsEdges.flatten
                       val frEdges = allWSEdges map { case (wsName, wsCandidate) =>
                         val reachableWrite = ReachableVerticesAtSameLocation(p, scenario, writeGlobalEvent, wsCandidate)
                         val pathOfReachableWrite = reachableWrite.map(pathOfEvent(scenario, _))
@@ -298,7 +301,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
                           })
                         )
                       }
-                      TreeOfDNF(frEdges)
+                      GraphTree(frEdges)
                     }
                     GraphTreeAnd(List(fr, GraphTreeLeaf(ExecutionEdgeLabel("rf", le), le)))
                   }
@@ -319,7 +322,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
           pathOfEvent(scenario, readsFromInitValue) match {
             case Some(pathOfReadFromInitial) =>
               /* find write event to same location */
-              val writeEventToSameAddress = WritesToSameLocation(pathOfReadFromInitial.evt.loc, scenario)
+              val writeEventToSameAddress = WritesToSameLocation(pathOfReadFromInitial.evt.addr, scenario)
               writeEventToSameAddress foreach { pathOfWrite => /* readsFromInit -fr-> write */
                 FRInitialPerformPairs(pathOfReadFromInitial, pathOfWrite) map { case (rLoc, wLoc) =>
                   /* add all fr edge into list buffer fromReadEdges */
@@ -328,7 +331,7 @@ object Execution extends AcyclicCheck with GlobalGraphID {
                   val e = (readGlobalEvent, writeGlobalEvent, "FRi")
                   val le = List(e)
                   def PrintPossibility: GraphTree[GlobalEvent] => String =
-                    t => DNFStringOfTree(GlobalEventString(p, _), t) + '\n'
+                    t => t.toString(GlobalEventString(p, _)) + '\n'
                   println(PrintPossibility(GraphTreeLeaf("fr_uhb", le)))
                   fromReadEdges += GraphTreeLeaf(ExecutionEdgeLabel("fr", le), le)
                 }

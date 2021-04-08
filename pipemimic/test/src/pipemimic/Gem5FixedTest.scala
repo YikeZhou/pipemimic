@@ -80,8 +80,8 @@ object Gem5FixedTest {
   
   def StoreLoadSpecialEdges(n: Int, c: Int)(eventsBefore: List[Event])(e: Event)(eventsAfter: List[Event]): GlobalGraph = {
     eventsAfter match {
-      case h :: t => (h.dirn, e.loc == h.loc) match {
-        case (Direction.R, true) =>
+      case h :: t => (h.dirn, e.addr == h.addr) match {
+        case (Some(Direction.R), true) =>
           ((4 + 9 * c, e.eiid), (3 + 9 * c, h.eiid), "StoreLoad") :: StoreLoadSpecialEdges(n, c)(eventsBefore)(e)(t)
         case _ =>
           StoreLoadSpecialEdges(n, c)(eventsBefore)(e)(t)
@@ -154,7 +154,7 @@ object Gem5FixedTest {
     e.dirn match {
       case Direction.R => List(
         PathOption(
-          optionName = s"Read${e.loc}",
+          optionName = s"Read${e.addr}",
           evt = e,
           path = StagesOfCore(c, (0 to 4).toList) ::: StagesOfCore(c, (6 to 8).toList),
           performStages = List(
@@ -165,7 +165,7 @@ object Gem5FixedTest {
       )
       case Direction.W => List(
         PathOption(
-          optionName = s"Write${e.loc}",
+          optionName = s"Write${e.addr}",
           evt = e,
           path = StagesOfCore(c, (0 to 4).toList ::: StagesOfCore(c, (6 to 8).toList) ::: StagesOfCore(n, (0 to 1).toList)),
           performStages = List(
