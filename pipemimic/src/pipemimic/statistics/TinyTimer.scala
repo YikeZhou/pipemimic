@@ -1,4 +1,4 @@
-package pipemimic
+package pipemimic.statistics
 
 class TinyTimer(name: String) {
   var start: Long = _
