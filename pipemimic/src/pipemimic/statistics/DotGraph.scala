@@ -181,7 +181,14 @@ class DotGraph(name: String, normalLines: List[(Int, Int, String)], extractor: I
     */
   def write(path: String): Unit = {
     require(path.nonEmpty && path.last != '/')
-    val writer = new PrintWriter(new File(s"$path/$name.gv"))
+    val writer = new PrintWriter(new File(s"$path/${name.filter(_.isLetterOrDigit)}.gv"))
+    writer.write(formattedGraph)
+    writer.close()
+  }
+
+  def write(path: String, suffix: String): Unit = {
+    require(path.nonEmpty && path.last != '/')
+    val writer = new PrintWriter(new File(s"$path/${name.filter(_.isLetterOrDigit)}$suffix.gv"))
     writer.write(formattedGraph)
     writer.close()
   }

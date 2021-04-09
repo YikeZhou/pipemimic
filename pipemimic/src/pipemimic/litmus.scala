@@ -11,36 +11,6 @@ object LitmusTestResult extends Enumeration {
 }
 
 object Litmus {
-  /**
-    * all permutations of elements in l
-    * FIXME used in nowhere
-    * @param l provide elements
-    * @tparam A type of elements in l
-    * @return all possible permutations
-    */
-  def Permutations[A](l: List[A]): List[List[A]] = {
-    /**
-      * insert a into different places in l2, then append l2' to l1
-      * @param a pivot insert into l2
-      * @param l1 prefix list
-      * @param l2 suffix list
-      * @tparam B type of element in l1 and l2
-      * @return l1 ::: (permutations of a and l2)
-      */
-    def helper[B](a: B, l1: List[B], l2: List[B]): List[List[B]] = {
-      l2 match {
-        /* place a in front of l2 || insert into tail of l2 */
-        case head :: next => (l1 ::: (a :: l2)) :: helper(a, l1.appended(head), next)
-        case Nil => List(l1.appended(a))
-      }
-    }
-
-    l match {
-      case Nil => Nil
-      case List(h) => List(List(h))
-      case head :: next => Permutations(next).flatMap(helper(head, Nil, _))
-    }
-  }
 
   /**
     * Given a read event r, find matching write events in l
@@ -74,7 +44,7 @@ object Litmus {
     * @param events list of event
     * @return legal execution or forbidden case
     */
-  def LitmusTest(name: String, expected: LitmusTestExpectation.Value, p: Pipeline, events: List[Event])
+  def LitmusTest(name: String, expected: LitmusTestResult.Value, p: Pipeline, events: List[Event])
   : List[(String, String)] = {
 
 

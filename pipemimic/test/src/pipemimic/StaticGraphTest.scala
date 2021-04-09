@@ -9,7 +9,7 @@ import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
 import pipemimic.PreservedProgramOrder.AllScenariosForPOWithAnyAddress
 import java.io._
 
-import edges.StaticEdges
+import pipemimic.Stages.Pipeline
 
 class StaticGraphTest extends AnyFlatSpec {
   def StaticGraph(p: Pipeline, po: List[Direction.Value]): List[String] = {
@@ -17,7 +17,7 @@ class StaticGraphTest extends AnyFlatSpec {
     val graphs = scenarios map {
       s => 
         println("Scenario Title: " + s._1)
-        val se = ScenarioEdges("PPO", p, s._2)
+        val se = Stages.ScenarioEdges("PPO", p, s._2)
         println(se)
         val raw = getid(p, se)
         val gs = raw.flatten
@@ -37,7 +37,7 @@ class StaticGraphTest extends AnyFlatSpec {
     /* test scenario 1 first */
     val s = scenarios.head
     println(s"Scenario Title: ${s._1}")
-    val graphRef = ScenarioEdges("PPO", pipeline, s._2) /* static edges ? */
+    val graphRef = Stages.ScenarioEdges("PPO", pipeline, s._2) /* static edges ? */
     val graph = Stages.ScenarioEdges("PPO", pipeline, s._2)
     println(graph)
     val raw = getid(pipeline, graph)
