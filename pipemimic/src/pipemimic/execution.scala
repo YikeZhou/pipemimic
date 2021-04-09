@@ -1,11 +1,10 @@
 package pipemimic
 
-import pipemimic.Dot.DotGraph
 import pipemimic.Stages._
-import ListUtils._
 import Interleavings.Interleave
 import pipemimic.MustHappenBefore.TreeAcyclicInSomeGraph
 import pipemimic.topology.PathFinder
+import Dot.DotGraph
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -139,7 +138,7 @@ object Execution extends GlobalGraphID {
   }
 
   def VertexHasSameAddress(s: Scenario, l: Option[Location], e: GlobalEvent): Boolean = {
-    NthError(s, e._2) match {
+    s.lift(e._2) match {
       case Some(po) => po.evt.addr == l
       case None => false
     }
@@ -225,7 +224,7 @@ object Execution extends GlobalGraphID {
   def ScenarioExecutionEdges_WS_SortByLoc(s: Scenario): List[List[PathOption]] = {
     s match {
       case head :: next => (head.evt.dirn, head.evt.addr) match {
-        case (Some(Direction.W), Some(l)) => AppendToNth(ScenarioExecutionEdges_WS_SortByLoc(next), l, head)
+        case (Some(Direction.W), Some(l)) => ScenarioExecutionEdges_WS_SortByLoc(next).appendToNth(l, head)
         case _ => ScenarioExecutionEdges_WS_SortByLoc(next)
       }
       case Nil => Nil
@@ -249,7 +248,7 @@ object Execution extends GlobalGraphID {
           val wsCandidateForEachLocation = writeEventsSortByLocThenCore.map(Interleave)
           /* for each possible case, generate a edge list */
           /* when there is only 1 write op at location, no ws edge will be generated */
-          wsCandidateForEachLocation.map(_.map(PairConsecutiveWithLabel[GlobalEvent]("WS", _)))
+          wsCandidateForEachLocation.map(_.map(_.pairConsecutive("WS")))
         }
         /* turn list of global edges into a graph tree */
         val rawGraph = GraphTreeAnd(edgesPerInterleaving.map { wsCandidatesAtLocation =>

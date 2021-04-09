@@ -1,5 +1,7 @@
 package pipemimic
 
+import pipemimic.organization.Bell
+
 package object ppo {
   /* four type of program orders */
   object ProgramOrder extends Enumeration {
@@ -26,7 +28,7 @@ package object ppo {
       List(blankEvents)
     } else {
       /* assign address to events */
-      Bell.BellNumber(blankEvents.length) map { locs =>
+      Bell(blankEvents.length) map { locs =>
         /* locs: one possible overlapping for address */
         locs zip blankEvents map {
           case (location, Event(eiid, iiid, Access(direction, _, value))) =>

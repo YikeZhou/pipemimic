@@ -1,6 +1,5 @@
 package pipemimic
 
-import pipemimic.Bell.BellNumber
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
 import pipemimic.Stages._
@@ -189,7 +188,7 @@ object PreservedProgramOrder {
           case (Event(eiid, iiid, Access(d, _, v)), location) => Event(eiid, iiid, Access(d, location, v))
         }
       }
-      BellNumber(l.length).map(ReplaceLocs(l, _))
+      organization.Bell(l.length).map(ReplaceLocs(l, _))
     }
 
     val programOrder = GenerateEventsFromDirections(po) /* add direction info */
