@@ -1,10 +1,10 @@
 package pipemimic
 
 import pipemimic.Stages._
-import Interleavings.Interleave
 import pipemimic.MustHappenBefore.TreeAcyclicInSomeGraph
 import pipemimic.topology.PathFinder
 import Dot.DotGraph
+import organization.Interleaving
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -245,7 +245,7 @@ object Execution extends GlobalGraphID {
           val sortedByLocation = ScenarioExecutionEdges_WS_SortByLoc(scenario)
           val writeEventsSortByLocThenCore = sortedByLocation.map(ScenarioExecutionEdges_WS_SortByCore)
           /* element in wsCandidateForEachLocation : all possibilities of write serialization for location 0~n */
-          val wsCandidateForEachLocation = writeEventsSortByLocThenCore.map(Interleave)
+          val wsCandidateForEachLocation = writeEventsSortByLocThenCore.map(Interleaving[GlobalEvent](_: _*))
           /* for each possible case, generate a edge list */
           /* when there is only 1 write op at location, no ws edge will be generated */
           wsCandidateForEachLocation.map(_.map(_.pairConsecutive("WS")))

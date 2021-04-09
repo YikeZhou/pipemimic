@@ -1,9 +1,7 @@
-package pipemimic
+package pipemimic.organization
 
 import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
-
-import Interleavings._
 
 class InterleavingsTest extends AnyFlatSpec {
   "Interleavings" should "return full interleavings of input lists" in {
@@ -19,6 +17,6 @@ class InterleavingsTest extends AnyFlatSpec {
       3 :: 4 :: 1 :: 2 :: Nil
     )
 
-    assert(Interleave(l1 :: l2 :: Nil) == r1)
+    assert(Interleaving(l1, l2) == r1)
   }
 }
