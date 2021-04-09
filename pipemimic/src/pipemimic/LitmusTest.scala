@@ -58,7 +58,6 @@ object LitmusTest {
     }
 
     val maxPoi = Seq(testCase.inst.core1.length, testCase.inst.core2.length)
-    var eiid = 0
 
     val initValues = Seq(testCase.init.core1, testCase.init.core2)
     val instructions = Seq(testCase.inst.core1, testCase.inst.core2)
@@ -83,21 +82,29 @@ object LitmusTest {
     }
 
     val events = ListBuffer.empty[Event]
+    var eiid = 0
 
     for (proc <- 0 until procCnt) {
+      var realPoi = 0
       for (poi <- 0 until maxPoi(proc)) {
         val curInst = instructions(proc)(poi)
         curInst match {
           case StoreWord(reg, addr) =>
             val access = Access(Direction.W, regFile(proc)(addr), regFile(proc)(reg))
-            events += Event(eiid, Iiid(proc, poi), access)
+            events += Event(eiid, Iiid(proc, realPoi), access)
+            eiid += 1
+            realPoi += 1
           case LoadWord(reg, addr) =>
             val valueLoaded = loadValues(proc)(reg)
             val access = Access(Direction.R, regFile(proc)(addr), valueLoaded)
-            events += Event(eiid, Iiid(proc, poi), access)
+            events += Event(eiid, Iiid(proc, realPoi), access)
             regFile(proc)(reg) = valueLoaded
+            eiid += 1
+            realPoi += 1
           case Fence() =>
-            events += Event(eiid, Iiid(proc, poi), MemoryFence())
+            events += Event(eiid, Iiid(proc, realPoi), MemoryFence())
+            eiid += 1
+            realPoi += 1
           case Xor(src1, src2, dst) =>
             regFile(proc)(dst) = regFile(proc)(src1) ^ regFile(proc)(src2)
           case Ori(src1, src2, dst) =>
@@ -106,7 +113,6 @@ object LitmusTest {
             regFile(proc)(dst) = regFile(proc)(src1) + regFile(proc)(src2)
           case _ =>
         }
-        eiid += 1
       }
     }
     println(events)
