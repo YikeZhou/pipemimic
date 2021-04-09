@@ -316,7 +316,7 @@ object Execution extends GlobalGraphID {
         }
         /* add fr edges */
         val fromReadEdges = ListBuffer.empty[GraphTree[GlobalEvent]]
-        val rfInitialReads = ReadsFromInitial(scenario.map(_.evt), rf) // FIXME: add initial values in litmus tests
+        val rfInitialReads = ReadsFromInitial(scenario.map(_.evt), rf)
         for (readsFromInitValue <- rfInitialReads) {
           /* given event readsFromInitValue, return corresponding fr edge */
           pathOfEvent(scenario, readsFromInitValue) match {

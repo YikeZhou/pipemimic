@@ -1,12 +1,19 @@
 package pipemimic.execution
 
+import pipemimic.MustHappenBefore.TreeAcyclicInSomeGraph
+import pipemimic.Stages.Pipeline
 import pipemimic._
 import pipemimic.statistics.DotGraph
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks._
 
-class LitmusTest(name: String, expected: LitmusTestResult.Value, events: List[Event]) {
+class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events: List[Event])
+  extends ScenariosForEvents /* generate scenarios */
+  with WriteSerializationEdge /* ws edges */
+  with ReadsFromEdge /* rf edges */
+  with FromReadEdge /* fr edges */
+{
   println(s"Litmus Test <$name>")
 
   /* Generate reads-from relation candidates */
@@ -73,42 +80,64 @@ class LitmusTest(name: String, expected: LitmusTestResult.Value, events: List[Ev
 
   /* Verify all cases for this test */
 
-  /** cases calculated when verifying (stop when find first observable cases) */
-  private var casesCnt = 0
+  def getResults(pipeline: Pipeline): LitmusTestResult = {
+    /** cases calculated when verifying (stop when find first observable cases) */
+    var casesCnt = 0
 
-  /** cases ruled out because of cyclic graph */
-  private val unobservedCases: ListBuffer[DotGraph] = ListBuffer.empty[DotGraph]
+    /** cases ruled out because of cyclic graph */
+    val unobservedCases: ListBuffer[DotGraph] = ListBuffer.empty[DotGraph]
 
-  private val observedCases: ListBuffer[DotGraph] = ListBuffer.empty[DotGraph]
+    val observedCases: ListBuffer[DotGraph] = ListBuffer.empty[DotGraph]
 
-  /** when coming across first observable case, set observable to true */
-  private var observable = false
+    /** when coming across first observable case, set observable to true */
+    var observable = false
 
-  breakable {
-    for (sourceLocationForEachReadEvent <- rf) {
-      /* check one case in rf list */
+    breakable {
+      for (sourceLocationForEachReadEvent <- rf) {
+        /* check one case in rf list */
+        val (readsFromWriteValue, readsFromInitValue) = sourceLocationForEachReadEvent.partition(_._1.isDefined)
 
-      /* change rf events pair into eiid pair */
-      val eiidPairs = sourceLocationForEachReadEvent.filter(_._1.isDefined) map {
-        case (Some(w), r) => (w.eiid, r.eiid)
+        /* change rf events pair into eiid pair */
+        val eiidPairs = readsFromWriteValue map {
+          case (Some(w), r) => (w.eiid, r.eiid)
+        }
+
+        /* generate a readable name for each rf relationship */
+        val caseName = name /* litmus test name */ + candidateName(expected, eiidPairs)
+
+        /* find out if this case is observable */
+
+        /** generate all combinations of events' path */
+        val scenarios = getScenarios(pipeline, events)
+        println(s"Found ${scenarios.length} scenarios")
+
+        breakable {
+          for ((scTitle, scenario) <- scenarios) {
+            /* verify a single scenario for current rf candidate */
+            val staticEdges = Stages.ScenarioEdges(scTitle, pipeline, scenario)
+
+            val ws = wsEdges(scenario)
+            val rf = rfEdges(ws, eiidPairs, scenario, pipeline)
+            val fr = frEdges(readsFromInitValue.map(_._2), scenario, pipeline)
+
+            val observedEdges = GraphTreeAnd(List(ws, rf, fr))
+
+            // TODO: MIGRATE THIS check result and update variables
+            TreeAcyclicInSomeGraph(/* global event -> int value */getid(pipeline, GraphTreeAnd(List(staticEdges,
+              observedEdges))))
+
+            /* graph name: caseName + scTitle */
+
+            /* generate dot graph */
+            // TODO GraphOfExecutionVerificationResult
+          }
+        }
+
+        if (observable) break
       }
-
-      /* generate a readable name for each rf relationship */
-      val caseName = name /* litmus test name */ + candidateName(expected, eiidPairs)
-
-      /* find out if this case is observable */
-      // TODO call GraphsToVerifyExecution in execution.scala
-
-//      if (result.observable) {
-//        /* find a legal execution */
-//        observable = true
-//        observedCases += result.dotgraph
-//        break
-//      } else {
-//        unobservedCases += result.dotgraph
-//        casesCnt += 1
-//      }
     }
+
+    LitmusTestResult(observable, observedCases.toList, unobservedCases.toList, casesCnt)
   }
 
 }

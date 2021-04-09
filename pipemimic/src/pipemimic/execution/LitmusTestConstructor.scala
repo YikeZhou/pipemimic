@@ -115,7 +115,7 @@ object LitmusTestConstructor {
       }
     }
     println(events)
-    new LitmusTest(name, LitmusTestResult.Permitted, events.toList)
+    new LitmusTest(name, LitmusTestExpectedResult.Permitted, events.toList)
   }
 
   sealed trait Body
