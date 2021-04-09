@@ -1,20 +1,19 @@
-package pipemimic
+package pipemimic.execution
 
 import litmus.antlr._
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
-import Stages.Pipeline
+import pipemimic._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 import scala.util.Try
 
-object LitmusTest {
-  type testFunc = Pipeline => List[(String, String)]
+object LitmusTestConstructor {
 
   final private val procCnt = 2
 
-  def apply(filePath: String): testFunc = {
+  def apply(filePath: String): LitmusTest = {
     val reader = Source.fromFile(filePath)
     val lines = reader.getLines()
     var testName = ""
@@ -31,10 +30,10 @@ object LitmusTest {
 
     reader.close()
 //    println(raw.toString())
-    LitmusTest(testName, parse(raw.toString()).asInstanceOf[TestCase])
+    LitmusTestConstructor(testName, parse(raw.toString()).asInstanceOf[TestCase])
   }
 
-  def apply(name: String, testCase: TestCase): testFunc = {
+  def apply(name: String, testCase: TestCase): LitmusTest = {
 //    println(testCase)
 
     /* assign values to x and y if given in 'exists' */
@@ -116,7 +115,7 @@ object LitmusTest {
       }
     }
     println(events)
-    Litmus.LitmusTest(name, LitmusTestResult.Permitted, _, events.toList)
+    new LitmusTest(name, LitmusTestResult.Permitted, events.toList)
   }
 
   sealed trait Body
@@ -301,7 +300,4 @@ object LitmusTest {
   }
 }
 
-object LitmusFileTest extends App {
-  for (file <- args)
-    LitmusTest(filePath = file)
-}
+
