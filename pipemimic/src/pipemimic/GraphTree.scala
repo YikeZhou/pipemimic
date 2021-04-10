@@ -45,7 +45,7 @@ case class GraphTreeAnd[A](l: List[GraphTree[A]]) extends GraphTree[A] {
       String)]) = {
       a match { case (an, al) => b match { case (bn, bl) => (an + bn, al ::: bl) } }
     }
-    CartesianProduct(l.map(_.flatten)).map(_.foldLeft("", List.empty[(A, A, String)])(joinGraphs))
+    CartesianProduct(l.map(_.flatten)).map(_.reduce(joinGraphs))
   }
 
   override def toString(printNode: A => String): String = s"And(${l.map(_.toString(printNode)).mkString})"
@@ -56,7 +56,7 @@ case class GraphTreeLeaf[A](s: String, l: List[(A, A, String)]) extends GraphTre
     case (s, d, str) => f(s, d, str)
   })
 
-  override def flatten: List[(String, List[(A, A, String)])] = (s, l) :: Nil
+  override def flatten: List[(String, List[(A, A, String)])] = if (l.isEmpty) Nil else (s, l) :: Nil
 
   override def toString(printNode: A => String): String = l.map {
     case (a, b, label) => s"${printNode(a)}-$label->${printNode(b)}"
@@ -66,8 +66,41 @@ case class GraphTreeLeaf[A](s: String, l: List[(A, A, String)]) extends GraphTre
   }
 }
 
+object TreeNodeType extends Enumeration {
+  val Or, And, Leaf = Value
+}
+
 object GraphTree {
+
   def GraphTreeEmptyLeaf[A]: GraphTreeLeaf[A] = GraphTreeLeaf("", List.empty[(A, A, String)])
+
+  implicit class GraphTreeMethods[A](g: GraphTree[A]) {
+    def isEmpty: Boolean = {
+      g match {
+        case GraphTreeOr(l) => l.isEmpty || l.map(_.isEmpty).reduce(_ && _)
+        case GraphTreeAnd(l) => l.isEmpty || l.map(_.isEmpty).reduce(_ && _)
+        case GraphTreeLeaf(s, l) => l.isEmpty
+      }
+    }
+
+    /**
+      * Tries to represent a GraphTree in a simpler but equivalent form. It doesn't guarantee minimality.
+      * @return simplified GraphTree equivalent to `g`
+      */
+    def simplify: GraphTree[A] = {
+      if (g.isEmpty) return GraphTreeEmptyLeaf[A]
+
+      g match {
+        case GraphTreeOr(l) =>
+          val children = l.filterNot(_.isEmpty).map(_.simplify)
+          if (children.length == 1) children.head else GraphTreeOr(children)
+        case GraphTreeAnd(l) =>
+          val children = l.filterNot(_.isEmpty).map(_.simplify)
+          if (children.length == 1) children.head else GraphTreeAnd(children)
+        case _ => g
+      }
+    }
+  }
 
   /**
     * converts a list of graphs into GraphTree representation.
@@ -75,22 +108,19 @@ object GraphTree {
     * @tparam A type of graph nodes
     * @return GraphTree
     */
-  def apply[A](l: List[(String, List[(A, A, String)])]): GraphTree[A] = {
-    /**
-      * GraphTreeSimplify tries to represent a GraphTree in a simpler but equivalent form.
-      * It doesn't guarantee minimality.
-      * @param g a GraphTree
-      * @return simplified GraphTree
-      */
-    def GraphTreeSimplify(g: GraphTree[A]): GraphTree[A] = {
-      g match {
-        case GraphTreeOr(List(x)) => GraphTreeSimplify(x)
-        case GraphTreeOr(l) => GraphTreeOr(l.map(GraphTreeSimplify))
-        case GraphTreeAnd(List(x)) => GraphTreeSimplify(x)
-        case GraphTreeAnd(l) => GraphTreeAnd(l.map(GraphTreeSimplify))
-        case _ => g
-      }
+  def apply[A](l: List[(String, List[(A, A, String)])]): GraphTree[A] =
+    GraphTreeOr(l.map { case (str, value) => GraphTreeLeaf(str, value) }).simplify
+
+  def apply[A](t: TreeNodeType.Value, l: List[GraphTree[A]]): GraphTree[A] = {
+    require(t == TreeNodeType.Or || t == TreeNodeType.And)
+    (t: @unchecked) match {
+      case TreeNodeType.Or => GraphTreeOr(l).simplify
+      case TreeNodeType.And => GraphTreeAnd(l).simplify
     }
-    GraphTreeSimplify(GraphTreeOr(l.map { case (str, value) => GraphTreeLeaf(str, value) }))
+  }
+
+  def apply[A](t: TreeNodeType.Value, s: String, l: List[(A, A, String)]): GraphTree[A] = {
+    require(t == TreeNodeType.Leaf)
+    GraphTreeLeaf(s, l).simplify
   }
 }

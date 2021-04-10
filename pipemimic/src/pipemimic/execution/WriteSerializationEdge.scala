@@ -59,13 +59,13 @@ trait WriteSerializationEdge {
       wsCandidateForEachLocation.map(_.map(_.pairConsecutive("WS")))
     }
     /* turn list of global edges into a graph tree */
-    val rawGraph = GraphTreeAnd(edgesPerInterleaving.toList.map { wsCandidatesAtLocation =>
+    val rawGraph = GraphTree(TreeNodeType.And, edgesPerInterleaving.map { wsCandidatesAtLocation =>
       val wsPossibilities = wsCandidatesAtLocation map { candidate =>
         /* one possible write serialization */
         GraphTreeLeaf(executionEdgeLabel("ws", candidate), candidate)
       }
       println(s"WS @ location: ${wsPossibilities.length} candidates\n")
-      GraphTreeOr(wsPossibilities)
+      GraphTree(TreeNodeType.Or, wsPossibilities)
     })
 //    println(rawGraph)
     rawGraph

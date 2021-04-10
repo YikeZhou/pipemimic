@@ -43,6 +43,6 @@ trait FromReadEdge {
       }
     }
 
-    GraphTreeAnd(fromReadEdges.toList)
+    GraphTree(TreeNodeType.And, fromReadEdges.toList)
   }
 }

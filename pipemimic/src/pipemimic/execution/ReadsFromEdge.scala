@@ -95,20 +95,20 @@ trait ReadsFromEdge extends GlobalGraphID {
                       })
                     )
                   }
-                  GraphTree(frEdges)
+                  GraphTree(frEdges) // FIXME check this bad usage of GraphTree apply method
                 }
-                GraphTreeAnd(List(fr, GraphTreeLeaf(executionEdgeLabel("rf", le), le)))
+                GraphTree(TreeNodeType.And, List(fr, GraphTreeLeaf(executionEdgeLabel("rf", le), le)))
               }
             }
             println(s"Source path ${pathOfWrite.optionName}, Dest path ${pathOfRead.optionName}\n")
             println(s"Architectural RF edge: ${rfPossibilities.length} uhb candidates\n")
-            GraphTreeOr(rfPossibilities)
+            GraphTree(TreeNodeType.Or, rfPossibilities)
 
           case _ => sys.error("ScenarioExecutionEdges_RF_fromwrite: event not in scenario")
         }
       }
     }
 
-    GraphTreeAnd(readsFromEdges.toList)
+    GraphTree(TreeNodeType.And, readsFromEdges.toList)
   }
 }

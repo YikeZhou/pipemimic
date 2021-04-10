@@ -129,6 +129,7 @@ object TestSuite extends App {
   for (litmusTest <- litmusTestsForRVWMO) {
     val result = litmusTest.getResults(pipeline)
     allLitmusTestGraphs.appendAll(result.unobserved).appendAll(result.observed)
+    println(s"observable = ${result.observable} after checking ${result.casesCnt} cases")
   }
 
   println(s"found ${allLitmusTestGraphs.length} litmus test results")
