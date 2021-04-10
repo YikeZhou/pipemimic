@@ -3,6 +3,7 @@ package pipemimic
 import scala.annotation.tailrec
 
 trait GlobalGraphID {
+  // FIXME p.stages may be not suitable for continuous id
   def geid(p: Pipeline, ge: GlobalEvent): Int = {
     ge match {
       case (n, e) => e * p.stages.length + n
@@ -21,9 +22,9 @@ trait GlobalGraphID {
     }
   }
 
-  def ungeid(p: Pipeline, n: Int): (Location, ProgramOrderIndex) = {
+  def ungeid(p: Pipeline, n: Int): (Location, Eiid) = {
     @tailrec
-    def helper(p: Pipeline, n: Int, s: Int, e: Int): (Location, ProgramOrderIndex) = {
+    def helper(p: Pipeline, n: Int, s: Int, e: Int): (Location, Eiid) = {
       if (s == p.stages.length) {
         if (n == 0) (0, e + 1) else helper(p, n - 1, 1, e + 1)
       } else if (s < p.stages.length) {
