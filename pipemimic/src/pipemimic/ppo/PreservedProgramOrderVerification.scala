@@ -1,17 +1,14 @@
 package pipemimic.ppo
 
-import pipemimic.Dot.DotGraph
-import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
-import pipemimic.{CartesianProduct, Event, GraphTree, GraphTreeLeaf, ListImprovements, Stages}
-import pipemimic.Stages.{GlobalEvent, GlobalEventString, PathOption, PerformStages, Pipeline, Scenario}
-import pipemimic.statistics.DotGraph
-import pipemimic.topology.VerifyMustHappenBeforeInGraph
+import pipemimic.Stages._
 import pipemimic.execution._
+import pipemimic.statistics.DotGraph
+import pipemimic.{CartesianProduct, Event, GlobalGraphID, GraphTree, GraphTreeLeaf, ListImprovements, Stages}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
-trait PreservedProgramOrderVerification {
+trait PreservedProgramOrderVerification extends GlobalGraphID {
   /**
     * Perform with respect to other cores before with respect to localCore
     * @param po1 with respect to i in cores (other core)
