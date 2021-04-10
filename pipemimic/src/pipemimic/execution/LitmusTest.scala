@@ -133,12 +133,12 @@ class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events:
           graphEdges.existsCycle match {
             case Some(cycle) => /* ruled out */
               /* generate dot graph */
-              unobservedCases += new DotGraph(s"Forbidden: $caseName$scTitle$graphTitle", graphEdges,
+              unobservedCases += new DotGraph(s"Forbidden: $caseName$scTitle", graphEdges,
                 ungeid(pipeline, _), getEventName, cycle, cycle.pairConsecutive, pipeline.stages.length)
             case None =>
               observable = true
               /* generate dot graph */
-              observedCases += new DotGraph(s"Permitted: $caseName$scTitle$graphTitle", graphEdges,
+              observedCases += new DotGraph(s"Permitted: $caseName$scTitle", graphEdges,
                 ungeid(pipeline, _), getEventName, Nil, Nil, pipeline.stages.length)
               return LitmusTestResult(observable, observedCases.toList, unobservedCases.toList, casesCnt)
           }
