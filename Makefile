@@ -1,4 +1,4 @@
-.PHONY: testAll testOne initSubmodule graph clean litmusPreview genAntlr loadTests runLitmusTests
+.PHONY: testAll testOne initSubmodule graph clean litmusPreview genAntlr loadTests runLitmusTests lines linesEachFile
 
 project_name=pipemimic
 test_target=
@@ -47,3 +47,9 @@ loadTests: $(java_srcs) $(litmus_tests)
 
 runLitmusTests: $(java_srcs) $(litmus_tests)
 	mill pipemimic.runMain pipemimic.TestSuite $(litmus_tests)
+
+lines:
+	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l
+
+linesEachFile:
+	find ./pipemimic/ -name '*.scala' | xargs wc -l | sort -nr
