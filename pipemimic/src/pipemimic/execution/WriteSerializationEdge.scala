@@ -1,10 +1,9 @@
 package pipemimic.execution
 
-import pipemimic.Stages.{GlobalEvent, PathOption, PerformStages, Scenario}
+import pipemimic._
 import pipemimic.organization.Interleaving
-import pipemimic.{Direction, GraphTree, GraphTreeAnd, GraphTreeLeaf, GraphTreeOr, ListImprovements}
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 
 /**
   * To calculate all of the WS edges, we do the following:
@@ -19,25 +18,25 @@ trait WriteSerializationEdge {
   private val coreCnt = 2 /* only called when running litmus tests and core number must be 2 */
   private val memoryCell = 3 /* defined in litmus test */
 
-  private def sortByCore(s: Scenario): Array[Array[GlobalEvent]] = {
-    val sorted = Array.fill(coreCnt)(ArrayBuffer.empty[GlobalEvent])
+  private def sortByCore(s: Scenario): List[List[GlobalEvent]] = {
+    val sorted = List.fill(coreCnt)(ListBuffer.empty[GlobalEvent])
 
     for (path <- s) {
       /* write serialization must happen in shared cache or main memory */
       val performStage = path.performStages.find(_.isMainMemory)
 
       performStage match {
-        case Some(PerformStages(stage, cores, observability, cacheLineInvLoc, isMainMemory)) =>
+        case Some(PerformStages(stage, _, _, _, _)) =>
           /* append to proc-th array in sorted */
           sorted(path.evt.iiid.proc) += ((stage, path.evt.eiid))
         case _ =>
       }
     }
-    sorted.map(_.toArray)
+    sorted.map(_.toList)
   }
 
-  private def sortByAddress(s: Scenario): Array[Scenario] = {
-    val sorted = Array.fill(memoryCell)(ListBuffer.empty[PathOption])
+  private def sortByAddress(s: Scenario): List[Scenario] = {
+    val sorted = List.fill(memoryCell)(ListBuffer.empty[PathOption])
 
     for (path <- s) {
       (path.evt.dirn, path.evt.addr) match {

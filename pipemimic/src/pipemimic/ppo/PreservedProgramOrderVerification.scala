@@ -1,9 +1,9 @@
 package pipemimic.ppo
 
-import pipemimic.Stages._
 import pipemimic.execution._
 import pipemimic.statistics.DotGraph
-import pipemimic.{CartesianProduct, Event, GlobalGraphID, GraphTree, GraphTreeLeaf, ListImprovements, Stages}
+import pipemimic._
+import pipemimic.topology.VerifyMustHappenBeforeInGraph
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -28,7 +28,7 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
       * @return performing location with respect to core c
       */
     @tailrec
-    def PerfWRTiAtStage(l: List[PerformStages], c: Int): Option[Stages.Location] = {
+    def PerfWRTiAtStage(l: List[PerformStages], c: Int): Option[Location] = {
       l match {
         case PerformStages(stg, cores, _, _, _) :: next =>
           if (cores.contains(c)) Some(stg) else PerfWRTiAtStage(next, c)
@@ -36,7 +36,7 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
       }
     }
 
-    val locationPair: List[(Option[Stages.Location], Option[Stages.Location])] = cores.map(remote =>
+    val locationPair: List[(Option[Location], Option[Location])] = cores.map(remote =>
       /* perform with respect to remote core,      perform with respect to local core */
       (PerfWRTiAtStage(po1.performStages, remote), PerfWRTiAtStage(po2.performStages, localCore))
     ).filter(t => t._1.isDefined && t._2.isDefined)
@@ -80,14 +80,6 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
   }
 
   /**
-    * Add title [t] to MHBResult [r]
-    * @param t title
-    * @param r result with current name
-    * @return result with name replaced by title t
-    */
-  def AddTitle(t: String, r: (String, MHBResult)): (String, MHBResult) = (t, r._2)
-
-  /**
     * calculates the set of all possible Scenarios for a given Pipeline and given directions of Events in program order
     * @param p pipeline -> use pathsFor function to determine path for given event
     * @param events list of events
@@ -99,29 +91,5 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
     }
     val allPaths = events.map(p.pathsFor(_))
     CartesianProduct(allPaths).map(s => (ScenarioTitle(s), s))
-  }
-
-  /**
-    * Generate dot graph for result with name [tr]
-    * @param p pipeline
-    * @param tr title and result
-    * @return dot graph String
-    */
-  def GraphOfPPOVerificationResult(p: Pipeline, tr: (String, MHBResult)): (String, String) = {
-    val (t, r) = tr
-    val f: Int => String = x => GlobalEventString(p, ungeid(p, x))
-    (
-      s"${p.pipeName}: PPO: $t",
-      r match {
-        case MustHappenBefore(g, l) =>
-          DotGraph(s"PPO Verified: ${p.pipeName}: $t", g, ungeid(p, _), f, l,
-            l.pairConsecutive, p.stages.length)
-        case Unverified(g, s, d) =>
-          DotGraph(s"PPO Unverified! ${p.pipeName}: $t", g, ungeid(p, _), f, List(s, d), Nil, p.stages.length)
-        case Cyclic(g, l) =>
-          DotGraph(s"PPO Ruled out (cyclic): ${p.pipeName}: $t", g, ungeid(p, _), f, l,
-            l.pairConsecutive, p.stages.length)
-      }
-    )
   }
 }

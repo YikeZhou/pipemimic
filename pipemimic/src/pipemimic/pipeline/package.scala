@@ -1,7 +1,5 @@
 package pipemimic
 
-import pipemimic.Stages.{LocalReordering, SpecialEdgeMap}
-
 package object pipeline {
   // TODO add useful definitions such as FIFO, NoSpecialEdges, etc.
 

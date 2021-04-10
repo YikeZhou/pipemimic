@@ -1,9 +1,8 @@
 package pipemimic.ppo
 
 import pipemimic.GraphTree.GraphTreeEmptyLeaf
-import pipemimic.Stages.{GlobalEvent, Pipeline, Scenario}
 import pipemimic.statistics.DotGraph
-import pipemimic.{GraphTreeLeaf, Stages}
+import pipemimic._
 
 import scala.collection.mutable.ListBuffer
 
@@ -23,7 +22,7 @@ class SameAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification 
 
     scenarios foreach { case (title, paths) =>
       println(s"verify ppo at $title")
-      val staticEdges = Stages.ScenarioEdges("PPOLocal", pipeline, paths)
+      val staticEdges = StaticEdges("PPOLocal", pipeline, paths)
       val edgesToBeVerified = {
         require(paths.length == 2)
         (paths.headOption, paths.lastOption) match {

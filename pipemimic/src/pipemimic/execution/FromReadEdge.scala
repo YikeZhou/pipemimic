@@ -1,7 +1,6 @@
 package pipemimic.execution
 
-import pipemimic.{Address, CartesianProductPairs, Event, GraphTree, GraphTreeAnd, GraphTreeLeaf}
-import pipemimic.Stages.{GlobalEvent, GlobalEventString, PathOption, Pipeline, Scenario}
+import pipemimic._
 
 import scala.collection.mutable.ListBuffer
 
@@ -14,7 +13,7 @@ trait FromReadEdge {
     val dstCore = dst.evt.iiid.proc
     val srcPerfStages = performOrInvalidStagesWithRespectToCore(dstCore, src)
     val dstPerfStages = performStagesWithRespectToCore(srcCore, dst)
-    CartesianProductPairs(srcPerfStages, dstPerfStages)
+    CartesianProduct(srcPerfStages, dstPerfStages)
   }
 
   def frEdges(readsFromInitValue: List[Event], s: Scenario, p: Pipeline): GraphTree[GlobalEvent] = {

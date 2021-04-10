@@ -2,8 +2,6 @@ package pipemimic
 
 import scala.annotation.tailrec
 
-import Stages._
-
 trait GlobalGraphID {
   def geid(p: Pipeline, ge: GlobalEvent): Int = {
     ge match {
@@ -23,9 +21,9 @@ trait GlobalGraphID {
     }
   }
 
-  def ungeid(p: Pipeline, n: Int): (Stages.Location, ProgramOrderIndex) = {
+  def ungeid(p: Pipeline, n: Int): (Location, ProgramOrderIndex) = {
     @tailrec
-    def helper(p: Pipeline, n: Int, s: Int, e: Int): (Stages.Location, ProgramOrderIndex) = {
+    def helper(p: Pipeline, n: Int, s: Int, e: Int): (Location, ProgramOrderIndex) = {
       if (s == p.stages.length) {
         if (n == 0) (0, e + 1) else helper(p, n - 1, 1, e + 1)
       } else if (s < p.stages.length) {

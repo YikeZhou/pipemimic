@@ -1,6 +1,5 @@
 package pipemimic.execution
 
-import pipemimic.Stages.{GlobalEventString, Pipeline}
 import pipemimic._
 import pipemimic.statistics.DotGraph
 import pipemimic.topology.VerifyMustHappenBeforeInGraph
@@ -100,6 +99,7 @@ class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events:
       /* change rf events pair into eiid pair */
       val eiidPairs = readsFromWriteValue map {
         case (Some(w), r) => (w.eiid, r.eiid)
+        case _ => sys.error("LitmusTest: fatal error in finding reads from write value")
       }
 
       /* generate a readable name for each rf relationship */
@@ -113,7 +113,7 @@ class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events:
 
       for ((scTitle, scenario) <- scenarios) {
         /* verify a single scenario for current rf candidate */
-        val staticEdges = Stages.ScenarioEdges(scTitle, pipeline, scenario)
+        val staticEdges = StaticEdges(scTitle, pipeline, scenario)
 
         val ws = wsEdges(scenario)
         val rf = rfEdges(ws, eiidPairs, scenario, pipeline)

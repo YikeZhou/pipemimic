@@ -1,5 +1,6 @@
 package pipemimic.pipeline
-import pipemimic.Stages
+
+import pipemimic.Pipeline
 
 class RVA9LikePipelineConstructor extends PipelineConstructor {
   /**
@@ -8,5 +9,5 @@ class RVA9LikePipelineConstructor extends PipelineConstructor {
     * @param coreNumber number of cores
     * @return new pipeline
     */
-  override def pipelineWithCore(coreNumber: Int): Stages.Pipeline = ???
+  override def pipelineWithCore(coreNumber: Int): Pipeline = ???
 }

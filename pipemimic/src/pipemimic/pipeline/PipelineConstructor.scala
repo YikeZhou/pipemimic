@@ -1,6 +1,6 @@
 package pipemimic.pipeline
 
-import pipemimic.Stages.Pipeline
+import pipemimic.Pipeline
 
 trait PipelineConstructor {
   /**

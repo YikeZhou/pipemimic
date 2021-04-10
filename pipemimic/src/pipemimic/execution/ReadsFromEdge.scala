@@ -1,8 +1,7 @@
 package pipemimic.execution
 
-import pipemimic.Stages._
 import pipemimic.topology.PathFinder
-import pipemimic.{CartesianProductPairs, Eiid, GlobalGraphID, GraphTree, GraphTreeAnd, GraphTreeLeaf, GraphTreeOr}
+import pipemimic._
 
 import scala.collection.mutable.ListBuffer
 
@@ -13,7 +12,7 @@ trait ReadsFromEdge extends GlobalGraphID {
     val dstCore = dst.evt.iiid.proc
     val srcPerfStages = performStagesWithRespectToCore(dstCore, src)
     val dstPerfStages = visibleStagesWithRespectToCore(srcCore, dst)
-    CartesianProductPairs(srcPerfStages, dstPerfStages)
+    CartesianProduct(srcPerfStages, dstPerfStages)
   }
 
   private def frFromWritePerformPairs(src: PathOption, dst: PathOption) = {
@@ -21,7 +20,7 @@ trait ReadsFromEdge extends GlobalGraphID {
     val dstCore = dst.evt.iiid.proc
     val srcPerfStages = performOrInvalidStagesWithRespectToCore(dstCore, src)
     val dstPerfStages = performStagesWithRespectToCore(srcCore, dst)
-    CartesianProductPairs(srcPerfStages, dstPerfStages)
+    CartesianProduct(srcPerfStages, dstPerfStages)
   }
 
   def rfEdges(wsEdges: GraphTree[GlobalEvent], rfEiidPairs: List[(Eiid, Eiid)], s: Scenario, p: Pipeline)

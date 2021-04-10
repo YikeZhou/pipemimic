@@ -1,7 +1,6 @@
 package pipemimic.execution
 
-import pipemimic.{CartesianProduct, Event}
-import pipemimic.Stages.{PathOption, Pipeline, Scenario}
+import pipemimic._
 
 trait ScenariosForEvents {
   /**

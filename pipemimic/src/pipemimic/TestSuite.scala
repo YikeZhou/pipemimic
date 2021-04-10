@@ -1,8 +1,7 @@
 package pipemimic
 
-import java.io.{File, PrintWriter}
-
-import pipemimic.Stages.{GlobalGraph, LocalReordering, PathOption, PathOptions, PerformStages, Pipeline, SpecialEdgeMap, Stage}
+import pipemimic.execution.{LitmusTest, LitmusTestConstructor}
+import pipemimic.statistics.DotGraph
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -28,7 +27,7 @@ object RISCTest {
 
   def FenceTSOSpecialEdges(c: Int, n: Int)(eventBefore: List[Event])(e: Event)(eventAfter: List[Event]): GlobalGraph = {
     require(e.action.isInstanceOf[MemoryFence])
-    val edges = ListBuffer.empty[((Stages.Location, Eiid), (Stages.Location, Eiid), String)]
+    val edges = ListBuffer.empty[((Location, Eiid), (Location, Eiid), String)]
     eventBefore foreach {
       case Event(eiid, Iiid(proc, _), action) => action match {
 
@@ -46,7 +45,7 @@ object RISCTest {
           for (latter <- eventAfter if latter.dirn.contains(Direction.W))
             edges += (((6 * n, eiid), (6 * n, latter.eiid), "FenceTSO"))
 
-        case MemoryFence() =>
+        case _ =>
       }
     }
     edges.toList
@@ -103,7 +102,7 @@ object RISCTest {
           sem = NoSpecialEdges
         )
       )
-      case None => List(
+      case _ => List(
         PathOption(
           optionName = s"Fence",
           evt = e,
@@ -115,25 +114,25 @@ object RISCTest {
     }
   }
 
-  def RISCPipeline(n: Int): Pipeline = Pipeline("RISC", RISCAllStages(n), RISCPathOptions(n, _))
+  def RISCPipeline(n: Int): Pipeline = Pipeline("RISC", RISCAllStages(n), RISCPathOptions(n, _), n)
 }
 
 object TestSuite extends App {
   /* build a list of litmus tests */
-  val litmusTestsForRVWMO = ListBuffer.empty[LitmusTest.testFunc]
+  val litmusTestsForRVWMO = ListBuffer.empty[LitmusTest]
 
   for (arg <- args)
-    litmusTestsForRVWMO += LitmusTest(arg)
+    litmusTestsForRVWMO += LitmusTestConstructor(arg)
 
-  val allLitmusTestGraphs = litmusTestsForRVWMO.toList.flatMap(t => t(pipemimic.RISCTest.RISCPipeline(2)))
-  println(s"found ${allLitmusTestGraphs.length} litmus test graphs")
-
-  val dots = allLitmusTestGraphs.map(_._2)
-  val names = allLitmusTestGraphs.map(_._1.filter(_.isLetterOrDigit))
-  dots zip names map {
-    case (str, i) =>
-      val writer = new PrintWriter(new File(s"./graphs/$i.gv"))
-      writer.write(str)
-      writer.close()
+  val allLitmusTestGraphs = ListBuffer.empty[DotGraph]
+  val pipeline = RISCTest.RISCPipeline(2)
+  for (litmusTest <- litmusTestsForRVWMO) {
+    val result = litmusTest.getResults(pipeline)
+    allLitmusTestGraphs.appendAll(result.unobserved).appendAll(result.observed)
   }
+
+  println(s"found ${allLitmusTestGraphs.length} litmus test results")
+
+  val dots = allLitmusTestGraphs.toList
+  dots foreach (dot => dot.write("./graphs"))
 }

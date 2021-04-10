@@ -1,7 +1,5 @@
 package pipemimic
 
-import pipemimic.Stages.{GlobalEvent, PathOption, Scenario}
-
 import scala.collection.mutable.ListBuffer
 
 package object execution {
