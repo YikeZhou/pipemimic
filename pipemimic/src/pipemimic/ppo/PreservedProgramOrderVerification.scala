@@ -2,10 +2,11 @@ package pipemimic.ppo
 
 import pipemimic.Dot.DotGraph
 import pipemimic.GlobalGraphIDUtils.{getid, ungeid}
-import pipemimic.{CartesianProduct, Cyclic, Event, GraphTree, GraphTreeLeaf, ListImprovements, MHBResult, MustHappenBefore, Stages, Unverified}
+import pipemimic.{CartesianProduct, Event, GraphTree, GraphTreeLeaf, ListImprovements, Stages}
 import pipemimic.Stages.{GlobalEvent, GlobalEventString, PathOption, PerformStages, Pipeline, Scenario}
 import pipemimic.statistics.DotGraph
 import pipemimic.topology.VerifyMustHappenBeforeInGraph
+import pipemimic.execution._
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer

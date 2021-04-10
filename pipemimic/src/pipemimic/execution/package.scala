@@ -10,6 +10,12 @@ package object execution {
     val Permitted, Forbidden = Value
   }
 
+  sealed abstract class MHBResult
+
+  case class Unverified(g: List[(Int, Int, String)], a: Int, b: Int) extends MHBResult
+  case class MustHappenBefore(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult
+  case class Cyclic(g: List[(Int, Int, String)], l: List[Int]) extends MHBResult
+
   implicit class ReadsFromPrinter(rf: (Option[Event], Event)) {
     override def toString: String = rf match {
       case (Some(es), ed) => s"${es.eiid}-rf->${ed.eiid}"

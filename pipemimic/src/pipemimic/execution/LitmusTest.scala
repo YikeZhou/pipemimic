@@ -1,12 +1,11 @@
 package pipemimic.execution
 
-import pipemimic.MustHappenBefore.TreeAcyclicInSomeGraph
-import pipemimic.Stages.Pipeline
+import pipemimic.Stages.{GlobalEventString, Pipeline}
 import pipemimic._
 import pipemimic.statistics.DotGraph
+import pipemimic.topology.VerifyMustHappenBeforeInGraph
 
 import scala.collection.mutable.ListBuffer
-import scala.util.control.Breaks._
 
 class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events: List[Event])
   extends ScenariosForEvents /* generate scenarios */
@@ -92,48 +91,58 @@ class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events:
     /** when coming across first observable case, set observable to true */
     var observable = false
 
-    breakable {
-      for (sourceLocationForEachReadEvent <- rf) {
-        /* check one case in rf list */
-        val (readsFromWriteValue, readsFromInitValue) = sourceLocationForEachReadEvent.partition(_._1.isDefined)
+    def getEventName: Int => String = x => GlobalEventString(pipeline, ungeid(pipeline, x))
 
-        /* change rf events pair into eiid pair */
-        val eiidPairs = readsFromWriteValue map {
-          case (Some(w), r) => (w.eiid, r.eiid)
-        }
+    for (sourceLocationForEachReadEvent <- rf) {
+      /* check one case in rf list */
+      val (readsFromWriteValue, readsFromInitValue) = sourceLocationForEachReadEvent.partition(_._1.isDefined)
 
-        /* generate a readable name for each rf relationship */
-        val caseName = name /* litmus test name */ + candidateName(expected, eiidPairs)
+      /* change rf events pair into eiid pair */
+      val eiidPairs = readsFromWriteValue map {
+        case (Some(w), r) => (w.eiid, r.eiid)
+      }
 
-        /* find out if this case is observable */
+      /* generate a readable name for each rf relationship */
+      val caseName = name /* litmus test name */ + candidateName(expected, eiidPairs)
 
-        /** generate all combinations of events' path */
-        val scenarios = getScenarios(pipeline, events)
-        println(s"Found ${scenarios.length} scenarios")
+      /* find out if this case is observable */
 
-        breakable {
-          for ((scTitle, scenario) <- scenarios) {
-            /* verify a single scenario for current rf candidate */
-            val staticEdges = Stages.ScenarioEdges(scTitle, pipeline, scenario)
+      /** generate all combinations of events' path */
+      val scenarios = getScenarios(pipeline, events)
+      println(s"Found ${scenarios.length} scenarios")
 
-            val ws = wsEdges(scenario)
-            val rf = rfEdges(ws, eiidPairs, scenario, pipeline)
-            val fr = frEdges(readsFromInitValue.map(_._2), scenario, pipeline)
+      for ((scTitle, scenario) <- scenarios) {
+        /* verify a single scenario for current rf candidate */
+        val staticEdges = Stages.ScenarioEdges(scTitle, pipeline, scenario)
 
-            val observedEdges = GraphTreeAnd(List(ws, rf, fr))
+        val ws = wsEdges(scenario)
+        val rf = rfEdges(ws, eiidPairs, scenario, pipeline)
+        val fr = frEdges(readsFromInitValue.map(_._2), scenario, pipeline)
 
-            // TODO: MIGRATE THIS check result and update variables
-            TreeAcyclicInSomeGraph(/* global event -> int value */getid(pipeline, GraphTreeAnd(List(staticEdges,
-              observedEdges))))
+        val observedEdges = GraphTreeAnd(List(ws, rf, fr))
 
-            /* graph name: caseName + scTitle */
+        /* global event -> int value */
+        val rawGraphs = getid(pipeline, GraphTreeAnd(List(staticEdges, observedEdges))).flatten
 
-            /* generate dot graph */
-            // TODO GraphOfExecutionVerificationResult
+        /* check if graph contains cycle */
+        println(s"Found ${rawGraphs.length} graphs in current rf candidate and scenario")
+        for (graph <- rawGraphs) {
+          casesCnt += 1
+          /* graph name: caseName + scTitle + graphTitle? */
+          val (graphTitle, graphEdges) = graph
+          graphEdges.existsCycle match {
+            case Some(cycle) => /* ruled out */
+              /* generate dot graph */
+              unobservedCases += new DotGraph(s"Forbidden: $caseName$scTitle$graphTitle", graphEdges,
+                ungeid(pipeline, _), getEventName, cycle, cycle.pairConsecutive, pipeline.stages.length)
+            case None =>
+              observable = true
+              /* generate dot graph */
+              observedCases += new DotGraph(s"Permitted: $caseName$scTitle$graphTitle", graphEdges,
+                ungeid(pipeline, _), getEventName, Nil, Nil, pipeline.stages.length)
+              return LitmusTestResult(observable, observedCases.toList, unobservedCases.toList, casesCnt)
           }
         }
-
-        if (observable) break
       }
     }
 

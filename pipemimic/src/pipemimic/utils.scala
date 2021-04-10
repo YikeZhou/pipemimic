@@ -240,7 +240,7 @@ object Dot {
   }
 
   def FormatString(l: List[String]): String = {
-    l.filter(!_.isEmpty) match {
+    l.filter(_.nonEmpty) match {
       case Nil => ""
       case x => x.mkString("[", ",", "]")
     }

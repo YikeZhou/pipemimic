@@ -1,8 +1,8 @@
 package pipemimic.execution
 
-import pipemimic.{Direction, GraphTree, GraphTreeAnd, GraphTreeLeaf, GraphTreeOr, ListImprovements}
-import pipemimic.Stages.{GlobalEvent, PathOption, PerformStages, Pipeline, Scenario}
+import pipemimic.Stages.{GlobalEvent, PathOption, PerformStages, Scenario}
 import pipemimic.organization.Interleaving
+import pipemimic.{Direction, GraphTree, GraphTreeAnd, GraphTreeLeaf, GraphTreeOr, ListImprovements}
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 

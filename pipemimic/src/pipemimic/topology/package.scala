@@ -1,5 +1,7 @@
 package pipemimic
 
+import pipemimic.execution.{Cyclic, MHBResult, MustHappenBefore, Unverified}
+
 import scala.collection.mutable.ListBuffer
 
 package object topology {
@@ -33,6 +35,7 @@ package object topology {
   }
 
   implicit class VerifyMustHappenBeforeInGraph(g: List[(Int, Int, String)]) {
+
     def existsPath(src: Int, dst: Int): MHBResult = {
       val graphWithoutLabel = g map { case (s, d, _) => (s, d) }
       TopologicalSort(graphWithoutLabel) match {
@@ -45,6 +48,14 @@ package object topology {
       }
     }
     def existsPath(sd: (Int, Int)): MHBResult = existsPath(sd._1, sd._2)
+
+    def existsCycle: Option[List[Node]] = {
+      val graphWithoutLabel = g map { case (s, d, _) => (s, d) }
+      TopologicalSort(graphWithoutLabel) match {
+        case CycleFound(cycle) => Some(cycle)
+        case _ => None
+      }
+    }
   }
 
 }
