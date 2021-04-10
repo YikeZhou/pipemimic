@@ -3,11 +3,7 @@ package pipemimic
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-trait HasEdgeBuffer {
-  val edges = new ArrayBuffer[(GlobalEvent, GlobalEvent, String)]()
-}
-
-abstract class StaticEdges {
+trait StaticEdges {
   def get(p: Pipeline, s: Scenario): GlobalGraph
 }
 
@@ -27,21 +23,20 @@ trait IntraLocationEdges extends StaticEdges {
     /** all local reordering for each location in pipeline p */
     val localReorderingForEachLocation = p.stages.map(_.localReordering)
 
-    val eventsSortedByFirstLocation = Array.fill(p.stages.length)(new ArrayBuffer[Event]())
+    val eventsSortedByFirstLocation = mutable.Map.empty[Int, ArrayBuffer[Event]]
     s foreach {
-      case PathOption(optionName, evt, path, performStages, sem) =>
+      case PathOption(_, evt, path, _, _) =>
         val firstLocation = path.head
-        eventsSortedByFirstLocation(firstLocation) += evt
+        eventsSortedByFirstLocation.getOrElseUpdate(firstLocation, ArrayBuffer.empty[Event]) += evt
     }
 
     val allEdges = Array.fill(p.stages.length)(new ArrayBuffer[(Event, Event)]())
 
     def programOrderEdges(events: mutable.Seq[Event]): mutable.Seq[(Event, Event)] = {
       /* sorted by processor index */
-      val processorIndices = events.map(_.iiid.proc)
-      val maxProcIndex = processorIndices.max // FIXME add a procCnt field to class Pipeline
-      val sortedEvents = Array.fill(maxProcIndex + 1)(new ArrayBuffer[Event]())
-      events foreach (e => sortedEvents(e.iiid.proc) += e)
+      val processorIndices = events.map(_.iiid.proc).toSet
+      assert(processorIndices.size == 1) /* input events always on same core no need to sort them by core id */
+      val sortedEvents = events.sortWith(_.iiid.poi < _.iiid.poi)
 
       def transitiveClosure[A](l: mutable.Seq[A]): mutable.Seq[(A, A)] = {
         val tc = ArrayBuffer.empty[(A, A)]
@@ -51,7 +46,7 @@ trait IntraLocationEdges extends StaticEdges {
         tc
       }
       /* generate all program order edges (not sorted by processor ids in return value) */
-      sortedEvents.flatMap(transitiveClosure(_))
+      transitiveClosure(sortedEvents) // FIXME when events more than 2 there will be too much edges
     }
 
     def transferredEdgesAtLocation(loc: Location, reordering: LocalReordering): List[(Event, Event)] = {
@@ -68,18 +63,18 @@ trait IntraLocationEdges extends StaticEdges {
       (0 until loc).flatMap { start =>
         /* check pair: (start, loc) for transferred edge */
         val lastStageEdges = transferredEdges(allEdges(start), start, loc)
-        localReorderingForEachLocation(loc)(allEdges.take(loc).map(_.toList).toList)(lastStageEdges.toList)
+        reordering(allEdges.take(loc).map(_.toList).toList)(lastStageEdges.toList)
       }.toList
     }
 
-    localReorderingForEachLocation.zipWithIndex zip eventsSortedByFirstLocation foreach {
-      case ((reordering, location), events) if events.nonEmpty =>
+    localReorderingForEachLocation.zipWithIndex foreach {
+      case (reordering, location) if eventsSortedByFirstLocation.contains(location) =>
         /* When there are events starting at current location, calculate their program order edges and add them into
         allEdges. This can be done by calculating transitive closure among these events.
          */
         allEdges(location).addAll(transferredEdgesAtLocation(location, reordering))
-        allEdges(location).addAll(programOrderEdges(events))
-      case ((reordering, location), events) if events.isEmpty =>
+        allEdges(location).addAll(programOrderEdges(eventsSortedByFirstLocation(location)))
+      case (reordering, location) => /* eventsSortedByFirstLocation doesn't contain location */
         /* When there are no more events left (meaning that no more events start at current location), keep calculate
         intra location edges (enforced by local reordering) until the last location in the pipeline.
          */
@@ -104,7 +99,7 @@ trait IntraEventEdges extends StaticEdges  {
   abstract override def get(p: Pipeline, s: Scenario): GlobalGraph = {
     val edges = new ArrayBuffer[(GlobalEvent, GlobalEvent, String)]()
     s foreach {
-      case PathOption(optionName, evt, path, performStages, sem) =>
+      case PathOption(_, evt, path, _, _) =>
         path.pairConsecutive("IntraEvent") map {
           case (s, d, str) => edges.addOne((s, evt.eiid), (d, evt.eiid), str)
         }
@@ -146,7 +141,7 @@ trait PathSpecialEdges extends StaticEdges {
       eventsSortedByProc(e.iiid.proc) += e
     }
     s foreach {
-      case PathOption(optionName, evt, path, performStages, sem) =>
+      case PathOption(_, evt, _, _, sem) =>
         val localEvents = eventsSortedByProc(evt.iiid.proc)
         val (before, after) = localEvents.filterNot(_.eiid == evt.eiid).partition(_.iiid.poi < evt.iiid.poi)
         edges.addAll(sem(before.toList)(evt)(after.toList))
