@@ -42,12 +42,13 @@ class GraphTreeTest extends AnyFlatSpec {
 
     def print_node(i: Int): String = i.toString
 
-    assert(DNFOfTree(gt1) == List(("AB", List((1, 2, "a"), (3, 4, "b")))))
-    assert(DNFOfTree(gt2) == List(("AB", List((1, 2, "a"), (3, 4, "b"))), ("AC", List((1, 2, "a"), (5, 6, "c")))))
-    assert(DNFOfTree(gt3) == List(("ABC", List((1, 2, "a"), (7, 8, "d"), (3, 4, "b"))), ("ABD", List((1, 2, "a"), (7, 8, "d"), (5, 6, "c")))))
-    assert(DNFOfTree(gt4) == List(("AB", List((1, 2, "a"), (3, 4, "b")))))
-    assert(DNFOfTree(gt5) == Nil)
+    assert(gt1.flatten == List(("AB", List((1, 2, "a"), (3, 4, "b")))))
+    assert(gt2.flatten == List(("AB", List((1, 2, "a"), (3, 4, "b"))), ("AC", List((1, 2, "a"), (5, 6, "c")))))
+    assert(gt3.flatten == List(("ABC", List((1, 2, "a"), (7, 8, "d"), (3, 4, "b"))), ("ABD", List((1, 2, "a"), (7, 8,
+      "d"), (5, 6, "c")))))
+    assert(gt4.flatten == List(("AB", List((1, 2, "a"), (3, 4, "b")))))
+    assert(gt5.flatten == Nil)
 
-    for (i <- 0 to 4) println(DNFStringOfTree(print_node, trees(i)))
+    for (i <- 0 to 4) println(trees(i).toString(print_node))
   }
 }

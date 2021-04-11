@@ -4,7 +4,6 @@ import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 import Stages._
-import ListUtils._
 import PreservedProgramOrder.GraphsToVerifyPPOWithAnyAddresses
 import Execution.GraphsToVerifyExecution
 
@@ -74,7 +73,7 @@ class StagesTest extends AnyFlatSpec {
       PathOption("Write", e3, List(0, 2, 4, 6, 7), List(PerformStages(4, List(0), List(0), None, true)), NoSpecialEdges)
     ))
 
-    val myScenario: Scenario = Head(Nil, myScenarios)
+    val myScenario: Scenario = myScenarios.head
 
     val myGlobalEdges = ScenarioEdges("my_sample", myPipeline, myScenario)
 

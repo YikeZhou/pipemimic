@@ -6,6 +6,7 @@
 .bloop/
 .bsp/
 .idea/
+.idea_modules/
 
 out/
 graphs/

@@ -6,12 +6,6 @@ import $ivy.`org.antlr:antlr4:4.8`
 import org.antlr.v4.Tool
 
 object parser extends JavaModule {
-//    override def unmanagedClasspath: Target[Loose.Agg[PathRef]] = Agg(
-//      mill.modules.Util.download(
-//        "https://www.antlr.org/download/antlr-4.9.2-complete.jar",
-//        RelPath("antlr.jar")
-//      )
-//    )
   override def ivyDeps = Agg(ivy"org.antlr:antlr4-runtime:4.8")
 
   def genAntlr = T {
