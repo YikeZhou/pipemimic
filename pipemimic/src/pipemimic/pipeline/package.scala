@@ -94,6 +94,7 @@ package object pipeline {
     eventsAfter foreach {
       case Event(eiid, _, Access(direction, address, _)) if direction == Direction.R && e.addr.contains(address) =>
         edges += (((loadPerformStage, e.eiid), (cacheInvPerformStage, eiid), "SpeculativeLoadReordering"))
+      case _ =>
     }
     edges.toList
   }
@@ -114,6 +115,7 @@ package object pipeline {
     eventsAfter foreach {
       case Event(eiid, _, Access(direction, address, _)) if direction == Direction.R && e.addr.contains(address) =>
         edges += (((storePerformStage, e.eiid), (loadPerformStage, eiid), "StoreLoad"))
+      case _ =>
     }
     edges.toList
   }
