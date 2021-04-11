@@ -20,7 +20,7 @@ package object pipeline {
     * The output order is guaranteed to match some previous ordering.
     * e.g. reorder buffer
     */
-  def restore(localStageIndex: Int): LocalReordering = e => _ => e(localStageIndex)
+  def restore(globalStageIndex: Int): LocalReordering = e => _ => e(globalStageIndex)
 
   /** Only operations to the same address are guaranteed to maintain their ordering. */
   def sameAddressOrdered: LocalReordering = _ => predecessor => predecessor filter {
