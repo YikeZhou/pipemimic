@@ -54,25 +54,29 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
   def verifyScenario(g: GraphTree[GlobalEvent], v: GraphTree[GlobalEvent], p: Pipeline): (Boolean, List[DotGraph]) = {
     require(g.isInstanceOf[GraphTreeLeaf[GlobalEvent]] && v.isInstanceOf[GraphTreeLeaf[GlobalEvent]])
 
-    val (title, staticEdges) = globalGraphID(p, g).flatten.head
-    val (edgesLabel, ppoEdges) = globalGraphID(p, v).flatten.head
+    val (staticEdgesTitles, staticEdgesList) = globalGraphID(p, g).flatten.unzip
+    val (_, ppoEdgesList) = globalGraphID(p, v).flatten.unzip
 
     val dotGraphs = ListBuffer.empty[DotGraph]
     var isSatisfied = true
 
-    for (edge <- ppoEdges) {
-      val (src, dst, edgeLabel) = edge
-      staticEdges.existsPath(src, dst) match {
-        case Unverified(_, _, _) => /* ppo edge unverified */
-          isSatisfied = false
-          dotGraphs += new DotGraph(s"PPO Unverified! ${p.pipeName}", staticEdges,
-            ungeid(p, _), (x: Int) => GlobalEventString(p, ungeid(p, x)), List(src, dst), Nil, p.stages.length)
-        case MustHappenBefore(_, l) =>
-          dotGraphs += new DotGraph(s"PPO Verified: ${p.pipeName}", staticEdges, ungeid(p, _),
-            (x: Int) => GlobalEventString(p, ungeid(p, x)), l, l.pairConsecutive, p.stages.length)
-        case Cyclic(_, l) =>
-          dotGraphs += new DotGraph(s"PPO Ruled out (cyclic): ${p.pipeName}", staticEdges,
-            ungeid(p, _), (x: Int) => GlobalEventString(p, ungeid(p, x)), l, l.pairConsecutive, p.stages.length)
+    val eventPairName = staticEdgesTitles.head
+
+    staticEdgesList zip ppoEdgesList foreach { case (staticEdges, ppoEdges) =>
+      for (edge <- ppoEdges) {
+        val (src, dst, edgeLabel) = edge
+        staticEdges.existsPath(src, dst) match {
+          case Unverified(_, _, _) => /* ppo edge unverified */
+            isSatisfied = false
+            dotGraphs += new DotGraph(s"PPO Unverified! ${p.pipeName} $eventPairName", staticEdges,
+              ungeid(p, _), (x: Int) => GlobalEventString(p, ungeid(p, x)), List(src, dst), Nil, p.stages.length)
+          case MustHappenBefore(_, l) =>
+            dotGraphs += new DotGraph(s"PPO Verified: ${p.pipeName} $eventPairName", staticEdges, ungeid(p, _),
+              (x: Int) => GlobalEventString(p, ungeid(p, x)), l, l.pairConsecutive, p.stages.length)
+          case Cyclic(_, l) =>
+            dotGraphs += new DotGraph(s"PPO Ruled out (cyclic): ${p.pipeName} $eventPairName", staticEdges,
+              ungeid(p, _), (x: Int) => GlobalEventString(p, ungeid(p, x)), l, l.pairConsecutive, p.stages.length)
+        }
       }
     }
 

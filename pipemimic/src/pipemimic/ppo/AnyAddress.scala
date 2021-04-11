@@ -20,7 +20,7 @@ class AnyAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification {
 
     scenarios foreach { case (title, paths) =>
       println(s"verify ppo at $title")
-      val staticEdges = StaticEdges("PPO", pipeline, paths)
+      val staticEdges = StaticEdges(s"PPOGlobal($title)", pipeline, paths)
       /* generate ppo global events */
       val edgesToBeVerified = { // TODO add speculative load reorder events
         require(paths.length == 2)
@@ -40,7 +40,7 @@ class AnyAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification {
       }
       val (satisfied, dotGraphs) = verifyScenario(staticEdges, edgesToBeVerified, pipeline)
       if (!satisfied) allSatisfied = false
-      graphs.addAll(dotGraphs) // TODO add title to dot graphs
+      graphs.addAll(dotGraphs)
     }
 
     (allSatisfied, graphs.toList)

@@ -11,7 +11,7 @@ trait GlobalGraphID {
     */
   def globalEventID(p: Pipeline, ge: GlobalEvent): Int = {
     ge match {
-      case (location, eiid) => eiid * p.inCoreStageNumber + location
+      case (location, eiid) => eiid * p.stages.length + location
     }
   }
 

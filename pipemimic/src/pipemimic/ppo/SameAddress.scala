@@ -22,7 +22,7 @@ class SameAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification 
 
     scenarios foreach { case (title, paths) =>
       println(s"verify ppo at $title")
-      val staticEdges = StaticEdges("PPOLocal", pipeline, paths)
+      val staticEdges = StaticEdges(s"PPOLocal($title)", pipeline, paths)
       val edgesToBeVerified = {
         require(paths.length == 2)
         (paths.headOption, paths.lastOption) match {
@@ -34,7 +34,7 @@ class SameAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification 
       }
       val (satisfied, dotGraphs) = verifyScenario(staticEdges, edgesToBeVerified, pipeline)
       if (!satisfied) allSatisfied = false
-      graphs.addAll(dotGraphs) // TODO add title to dot graphs
+      graphs.addAll(dotGraphs)
     }
 
     (allSatisfied, graphs.toList)
