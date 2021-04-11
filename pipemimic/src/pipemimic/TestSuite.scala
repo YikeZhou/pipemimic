@@ -10,9 +10,12 @@ import scala.collection.mutable.ListBuffer
 object TestSuite extends App {
   require(args.length >= 2)
 
+  val pipelineName = args.head
+  val outputDirectory = s"./graphs/${args.head}"
+
   /* construct a pipeline (using arg[0]) */
   val pipelineFactory = new PipelineFactory
-  val constructor = pipelineFactory.createPipeline(args.head)
+  val constructor = pipelineFactory.createPipeline(pipelineName)
 
   /* 1. ppo check for all type of program order */
   val ppoPipeline = constructor.pipelineWithCore(1)
@@ -21,14 +24,14 @@ object TestSuite extends App {
   val sameAddressTester = new SameAddress(ppoPipeline)
   for (po <- ppo.ProgramOrder.values) {
     println(s"[Same Address] $po is satisfied: ${sameAddressTester.isSatisfied(po)}")
-    // TODO print uhb graph here
+    sameAddressTester.getGraphs(po).foreach(_.write(outputDirectory))
   }
 
   /* 1-2 any address */
   val anyAddressTester = new AnyAddress(ppoPipeline)
   for (po <- ppo.ProgramOrder.values) {
     println(s"[Any Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
-    // TODO print uhb graph here
+    anyAddressTester.getGraphs(po).foreach(_.write(outputDirectory))
   }
 
   /*-------------------------------------------------------------------------------------------*/

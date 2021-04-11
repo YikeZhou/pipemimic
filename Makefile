@@ -43,7 +43,7 @@ loadTests: $(java_srcs) $(litmus_tests)
 
 run: $(java_srcs) $(litmus_tests)
 ifdef arch
-	mkdir -p graphs
+	mkdir -p graphs/$(arch)
 	mill pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
 endif
 
