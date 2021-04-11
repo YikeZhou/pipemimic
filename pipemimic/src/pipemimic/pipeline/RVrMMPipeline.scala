@@ -56,8 +56,8 @@ class RVrMMPipeline(n: Int) extends Pipeline {
             )
           ),
           sem = storeLoadSpecialEdges(
-            storePerformStage = stageOfCore(coreIndex, 2),
-            loadPerformStage = stageOfCore(coreIndex, 4)
+            storePerformStage = stageOfCore(coreIndex, 4/* if store performed squash speculative load */),
+            loadPerformStage = stageOfCore(coreIndex, 3/* relative load come back to issue */)
           )
         ))
       case _ /* Memory Fence */ => List(
@@ -91,7 +91,7 @@ class RVrMMPipeline(n: Int) extends Pipeline {
       Stage("Commit", restore(stageOfCore(currentIndex, 2)), NoSpecialEdges),
       Stage("StoreBuffer", sameAddressOrdered, storeBufferSpecialEdges(
         srcPerformStage = stageOfCore(currentIndex, 10),
-        dstPerformStage = stageOfCore(currentIndex, 8)
+        dstPerformStage = stageOfCore(currentIndex, 7)
       )))
   }
 

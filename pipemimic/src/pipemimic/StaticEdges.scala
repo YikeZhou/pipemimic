@@ -60,11 +60,15 @@ trait IntraLocationEdges extends StaticEdges {
       def transferredEdges(candidates: mutable.Seq[(Event, Event)], s: Location, d: Location)
       : mutable.Seq[(Event, Event)] = candidates.filter(isTransferredEdge(s, d, _))
 
-      (0 until loc).flatMap { start =>
+      val edgesAtLoc = mutable.Set.empty[(Event, Event)]
+
+      (0 until loc).foreach { start =>
         /* check pair: (start, loc) for transferred edge */
         val lastStageEdges = transferredEdges(allEdges(start), start, loc)
-        reordering(allEdges.take(loc).map(_.toList).toList)(lastStageEdges.toList)
-      }.toList
+        edgesAtLoc.addAll(reordering(allEdges.take(loc).map(_.toList).toList)(lastStageEdges.toList))
+      } /* NOTE for local reordering 'restore', this algorithm may yield repeated edges if not using set */
+
+      edgesAtLoc.toList
     }
 
     localReorderingForEachLocation.zipWithIndex foreach {
@@ -141,10 +145,11 @@ trait PathSpecialEdges extends StaticEdges {
       eventsSortedByProc(e.iiid.proc) += e
     }
     s foreach {
-      case PathOption(_, evt, _, _, sem) =>
+      case PathOption(_, evt, _, _, sem) if sem != pipeline.NoSpecialEdges =>
         val localEvents = eventsSortedByProc(evt.iiid.proc)
         val (before, after) = localEvents.filterNot(_.eiid == evt.eiid).partition(_.iiid.poi < evt.iiid.poi)
         edges.addAll(sem(before.toList)(evt)(after.toList))
+      case _ =>
     }
 
     super.get(p, s) ::: edges.toList

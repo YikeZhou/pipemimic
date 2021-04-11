@@ -37,7 +37,7 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
     }
 
     val locationPair: List[(Option[Location], Option[Location])] = cores.map(remote =>
-      /* perform with respect to remote core,      perform with respect to local core */
+      /* local event perform with respect to remote core, remote event perform with respect to local core */
       (PerfWRTiAtStage(po1.performStages, remote), PerfWRTiAtStage(po2.performStages, localCore))
     ).filter(t => t._1.isDefined && t._2.isDefined)
     /* local core happens before [c] in cores */
