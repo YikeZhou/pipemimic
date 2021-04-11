@@ -2,23 +2,25 @@ package pipemimic.pipeline
 
 import pipemimic._
 
-class RISCPipeline(n: Int) extends Pipeline {
+class RVrWRPipeline(n: Int) extends Pipeline {
   /** described basic features of this pipeline */
-  override val pipeName: String = "RISC"
+  override val pipeName: String = "RISC-V rWR"
   /** all stages of this pipeline */
-  override val stages: List[Stage] = List.tabulate(n)(RISCPipelineStages(n, _)).flatten ::: RISCSharedStages
+  override val stages: List[Stage] =
+    List.tabulate(n)(inCoreStages).flatten ::: unCoreStages
   /** map given event into list of its possible path options */
   override val pathsFor: Event => PathOptions = { e =>
+    val coreIndex = e.iiid.proc
     e.dirn match {
       case Some(Direction.R) => List(
         /* read from main memory */
         PathOption(
           optionName = s"Read${e.addr.get}",
           evt = e,
-          path = stageOfCore(e.iiid.proc, 0 until 5),
+          path = stageOfCore(coreIndex, List.range(0, 5)),
           performStages = List(
             PerformStages(
-              stage = stageOfCore(e.iiid.proc, 3),
+              stage = stageOfCore(coreIndex, 3),
               cores = List.range(0, n),
               observability = List.range(0, n),
               cacheLineInvLoc = None,
@@ -31,12 +33,12 @@ class RISCPipeline(n: Int) extends Pipeline {
         PathOption(
           optionName = s"STBFwd${e.addr.get}",
           evt = e,
-          path = stageOfCore(e.iiid.proc, List.range(0, 5)),
+          path = stageOfCore(coreIndex, List.range(0, 5)),
           performStages = List(
             PerformStages(
-              stage = stageOfCore(e.iiid.proc, 3),
+              stage = stageOfCore(coreIndex, 3),
               cores = List.range(0, n),
-              observability = List(e.iiid.proc),
+              observability = List(coreIndex),
               cacheLineInvLoc = None,
               isMainMemory = false
             )
@@ -48,19 +50,19 @@ class RISCPipeline(n: Int) extends Pipeline {
         PathOption(
           optionName = s"Write${e.addr.get}",
           evt = e,
-          path = stageOfCore(e.iiid.proc, List.range(0, 6)) ::: stageOfCore(n, List.range(0, 2)),
+          path = stageOfCore(coreIndex, List.range(0, 8)),
           performStages = List(
             /* write to store buffer */
             PerformStages(
-              stage = stageOfCore(e.iiid.proc, 3),
-              cores = List(e.iiid.proc),
-              observability = List(e.iiid.proc),
+              stage = stageOfCore(coreIndex, 3),
+              cores = List(coreIndex),
+              observability = List(coreIndex),
               cacheLineInvLoc = None,
               isMainMemory = false
             ),
             /* write to main memory */
             PerformStages(
-              stage = stageOfCore(e.iiid.proc, 0),
+              stage = stageOfCore(coreIndex, 6),
               cores = List.range(0, n),
               observability = List.range(0, n),
               cacheLineInvLoc = None,
@@ -68,42 +70,45 @@ class RISCPipeline(n: Int) extends Pipeline {
             )
           ),
           sem = NoSpecialEdges
-        )
-      )
-      case _ => List(
+        ))
+      case _ /* Memory Fence */ => List(
         PathOption(
           optionName = "Fence",
           evt = e,
-          path = stageOfCore(e.iiid.proc, List.range(0, 5)),
+          path = stageOfCore(coreIndex, List.range(0, 5)),
           performStages = Nil,
-          sem = FenceTSOSpecialEdges(e.iiid.proc, n)
+          sem = fenceTSOSpecialEdges(
+            storePerformStage = stageOfCore(coreIndex, 6),
+            loadPerformStage = stageOfCore(coreIndex, 3)
+          )
         )
       )
     }
   }
-  /** number of cores (currently only support 1 or 2) */
-  override val coreNumber: Location = n
-  /** number of intra-core stages */
-  override val inCoreStageNumber: Location = 6
 
-  private def RISCPipelineStages(n: Int, c: Int): List[Stage] = {
+  /** number of cores (currently only support 1 or 2) */
+  override val coreNumber: Int = n
+  /** number of intra-core stages */
+  override val inCoreStageNumber: Int = inCoreStages(0).length
+
+  private def inCoreStages(currentIndex: Int): List[Stage] = {
     List(
       Stage("Fetch", FIFO, NoSpecialEdges),
       Stage("Decode", FIFO, NoSpecialEdges),
       Stage("Execute", FIFO, NoSpecialEdges),
       Stage("Memory", FIFO, NoSpecialEdges),
       Stage("WriteBack", FIFO, NoSpecialEdges),
-      Stage("StoreBuffer", FIFO, StoreBufferSpecialEdges(c, n)),
-    )
+      Stage("StoreBuffer", FIFO, storeBufferSpecialEdges(
+        srcPerformStage = stageOfCore(currentIndex, 7),
+        dstPerformStage = stageOfCore(currentIndex, 5))))
   }
 
   /** number of off-core stages (such as main memory or shared cache) */
-  override val unCoreStageNumber: Location = 2
+  override val unCoreStageNumber: Int = unCoreStages.length
 
-  private def RISCSharedStages: List[Stage] = {
+  private def unCoreStages: List[Stage] = {
     List(
       Stage("MainMemory", NoOrderGuarantees, NoSpecialEdges),
-      Stage("Retire", FIFO, NoSpecialEdges)
-    )
+      Stage("Retire", FIFO, NoSpecialEdges))
   }
 }
