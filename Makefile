@@ -1,16 +1,15 @@
-.PHONY: testAll testOne initSubmodule graph clean litmusPreview genAntlr loadTests runLitmusTests lines linesEachFile
+.PHONY: testAll testOne graph clean genAntlr loadTests run lines linesEachFile
 
 project_name=pipemimic
 test_target=
+
+arch=
 
 litmus_test_dir=./litmus-tests-riscv/tests/non-mixed-size/BASIC_2_THREAD
 litmus_tests=$(wildcard $(litmus_test_dir)/*.litmus)
 
 java_srcs=$(shell cat ./javasrcs)
 antlr_srcs=$(wildcard ./parser/*.g4)
-
-litmusPreview:
-	cat $(litmus_tests) > preview.log
 
 graphs = $(wildcard ./graphs/*.gv)
 pngs = $(patsubst %.gv, %.png, $(graphs))
@@ -23,14 +22,11 @@ ifdef test_target
 	@echo "$(project_name).$(test_target)"
 	mill $(project_name).test.testOne $(project_name).$(test_target)
 else
-	@echo "argument missing"
+	@echo "<test target> argument missing"
 endif
 
-initSubmodule:
-	git submodule update --init
-
 clean:
-	rm graphs/*.gv graphs/*.png
+	rm -r graphs
 
 graph: $(pngs)
 
@@ -45,8 +41,11 @@ genAntlr: $(java_srcs)
 loadTests: $(java_srcs) $(litmus_tests)
 	mill pipemimic.runMain pipemimic.LitmusFileTest $(litmus_tests)
 
-runLitmusTests: $(java_srcs) $(litmus_tests)
-	mill pipemimic.runMain pipemimic.TestSuite $(litmus_tests)
+run: $(java_srcs) $(litmus_tests)
+ifdef arch
+	mkdir -p graphs
+	mill pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
+endif
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l

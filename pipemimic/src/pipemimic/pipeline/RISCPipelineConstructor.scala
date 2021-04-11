@@ -9,5 +9,5 @@ class RISCPipelineConstructor extends PipelineConstructor {
     * @param coreNumber number of cores
     * @return new pipeline
     */
-  override def pipelineWithCore(coreNumber: Int): Pipeline = ???
+  override def pipelineWithCore(coreNumber: Int): Pipeline = new RISCPipeline(coreNumber)
 }

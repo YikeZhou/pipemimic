@@ -242,7 +242,26 @@ package object pipemimic {
     * @param stages stages in this pipeline
     * @param pathsFor maps given event into a list of PathOptions
     */
-  case class Pipeline(pipeName: String, stages: List[Stage], pathsFor: Event => PathOptions, coreNum: Int)
+  abstract class Pipeline {
+    /** described basic features of this pipeline */
+    val pipeName: String
+    /** all stages of this pipeline */
+    val stages: List[Stage]
+    /** map given event into list of its possible path options */
+    val pathsFor: Event => PathOptions
+    /** number of cores (currently only support 1 or 2) */
+    val coreNumber: Int
+    /** number of intra-core stages */
+    val inCoreStageNumber: Int
+    /** number of off-core stages (such as main memory or shared cache) */
+    val unCoreStageNumber: Int
+    /** given core id and index in local intra-core stages, return index in [[stages]] */
+    def stageOfCore(core: Int, localStageIndex: Int): Int =
+      core * inCoreStageNumber + localStageIndex
+    /** given core id and indices in local intra-core stages, return indices in [[stages]] */
+    def stageOfCore(core: Int, localStageIndices: Seq[Int]): List[Int] =
+      localStageIndices.map(stageOfCore(core, _)).toList
+  }
 
   /* Cartesian Product of Lists of Lists */
 

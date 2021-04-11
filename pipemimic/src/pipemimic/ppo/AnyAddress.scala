@@ -31,6 +31,7 @@ class AnyAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification {
               case Some(PerformStages(_, cores, _, _, _)) => cores
               case None => Nil
             }
+            // FIXME when running ppo remote cores always be zero then there will be NO edges to be verified!
             val remoteCores = allCores.filterNot(_ == localCore)
             GraphTreeLeaf("PPO", PerfWRTiBeforePerfWRTj(src, dst, localCore, remoteCores))
 

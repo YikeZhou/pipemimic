@@ -136,7 +136,7 @@ trait PathSpecialEdges extends StaticEdges {
   abstract override def get(p: Pipeline, s: Scenario): GlobalGraph = {
     val edges = new ArrayBuffer[(GlobalEvent, GlobalEvent, String)]()
 
-    val eventsSortedByProc = Array.fill(p.coreNum)(ArrayBuffer.empty[Event])
+    val eventsSortedByProc = Array.fill(p.coreNumber)(ArrayBuffer.empty[Event])
     s.map(_.evt) foreach {e =>
       eventsSortedByProc(e.iiid.proc) += e
     }

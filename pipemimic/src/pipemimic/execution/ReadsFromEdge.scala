@@ -35,8 +35,8 @@ trait ReadsFromEdge extends GlobalGraphID {
           val predecessor = pathOption.evt
 
           val reachableVertices: List[GlobalEvent] = {
-            val rawGraph = edges.map(gepid(p, _)) map { case (s, d, _) => (s, d) }
-            PathFinder(rawGraph, geid(p, src)).getAllReachableNodes.map(ungeid(p, _))
+            val rawGraph = edges.map(globalEventEdgeID(p, _)) map { case (s, d, _) => (s, d) }
+            PathFinder(rawGraph, globalEventID(p, src)).getAllReachableNodes.map(ungeid(p, _))
           }
 
           reachableVertices

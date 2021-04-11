@@ -3,8 +3,6 @@ package pipemimic
 import java.io._
 
 import org.scalatest.flatspec.AnyFlatSpec
-import pipemimic.PreservedProgramOrder.GraphsToVerifyTSOPPO
-import pipemimic.Stages._
 
 import scala.annotation.tailrec
 
@@ -179,26 +177,26 @@ object Gem5FixedTest {
 
   }
 
-  def Gem5FixedO3Pipeline(n: Int): Pipeline = {
-    Pipeline("Gem5FixedO3", Gem5FixedO3AllStages(n), Gem5FixedO3PathOptions(n, _))
-  }
+//  def Gem5FixedO3Pipeline(n: Int): Pipeline = {
+//    Pipeline("Gem5FixedO3", Gem5FixedO3AllStages(n), Gem5FixedO3PathOptions(n, _))
+//  }
 }
 
-class Gem5FixedTest extends AnyFlatSpec {
-  "it" should "pass all litmus tests" in {
-    val allPPOGraphs = GraphsToVerifyTSOPPO(Gem5FixedTest.Gem5FixedO3Pipeline(1))
-    println(s"found ${allPPOGraphs.length} ppo graphs")
-    val allLitmusTestGraphs = Litmus.AllLitmusTests.map(t => t (Gem5FixedTest.Gem5FixedO3Pipeline(4)))
-    println(s"found ${allLitmusTestGraphs.length} litmus test graphs")
-    val allGraphs = allPPOGraphs ++ allLitmusTestGraphs.flatten
-
-    val dots = allGraphs.map(_._2)
-    val names = allGraphs.map(_._1.filter(_.isLetterOrDigit))
-    dots zip names map {
-      case (str, i) =>
-        val writer = new PrintWriter(new File(s"./graphs/$i.gv"))
-        writer.write(str)
-        writer.close()
-    }
-  }
-}
+//class Gem5FixedTest extends AnyFlatSpec {
+//  "it" should "pass all litmus tests" in {
+//    val allPPOGraphs = GraphsToVerifyTSOPPO(Gem5FixedTest.Gem5FixedO3Pipeline(1))
+//    println(s"found ${allPPOGraphs.length} ppo graphs")
+//    val allLitmusTestGraphs = Litmus.AllLitmusTests.map(t => t (Gem5FixedTest.Gem5FixedO3Pipeline(4)))
+//    println(s"found ${allLitmusTestGraphs.length} litmus test graphs")
+//    val allGraphs = allPPOGraphs ++ allLitmusTestGraphs.flatten
+//
+//    val dots = allGraphs.map(_._2)
+//    val names = allGraphs.map(_._1.filter(_.isLetterOrDigit))
+//    dots zip names map {
+//      case (str, i) =>
+//        val writer = new PrintWriter(new File(s"./graphs/$i.gv"))
+//        writer.write(str)
+//        writer.close()
+//    }
+//  }
+//}

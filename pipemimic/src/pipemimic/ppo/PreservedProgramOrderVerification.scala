@@ -54,8 +54,8 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
   def verifyScenario(g: GraphTree[GlobalEvent], v: GraphTree[GlobalEvent], p: Pipeline): (Boolean, List[DotGraph]) = {
     require(g.isInstanceOf[GraphTreeLeaf[GlobalEvent]] && v.isInstanceOf[GraphTreeLeaf[GlobalEvent]])
 
-    val (title, staticEdges) = getid(p, g).flatten.head
-    val (edgesLabel, ppoEdges) = getid(p, v).flatten.head
+    val (title, staticEdges) = globalGraphID(p, g).flatten.head
+    val (edgesLabel, ppoEdges) = globalGraphID(p, v).flatten.head
 
     val dotGraphs = ListBuffer.empty[DotGraph]
     var isSatisfied = true

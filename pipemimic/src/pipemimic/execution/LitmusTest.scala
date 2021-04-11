@@ -122,7 +122,7 @@ class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events:
         val observedEdges = GraphTree(TreeNodeType.And, List(ws, rf, fr))
 
         /* global event -> int value */
-        val rawGraphs = getid(pipeline, GraphTree(TreeNodeType.And, List(staticEdges, observedEdges))).flatten
+        val rawGraphs = globalGraphID(pipeline, GraphTree(TreeNodeType.And, List(staticEdges, observedEdges))).flatten
 
         /* check if graph contains cycle */
         println(s"Found ${rawGraphs.length} graphs in current rf candidate and scenario")
