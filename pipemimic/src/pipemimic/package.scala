@@ -238,9 +238,6 @@ package object pipemimic {
   /**
     * A [Pipeline] is defined as a set of [Stage]s, a function [pathsFor] that maps each event into a list of its
     * possible [PathOptions]
-    * @param pipeName name of this pipeline
-    * @param stages stages in this pipeline
-    * @param pathsFor maps given event into a list of PathOptions
     */
   abstract class Pipeline {
     /** described basic features of this pipeline */
@@ -257,7 +254,10 @@ package object pipemimic {
     val unCoreStageNumber: Int
     /** given core id and index in local intra-core stages, return index in [[stages]] */
     def stageOfCore(core: Int, localStageIndex: Int): Int =
-      core * inCoreStageNumber + localStageIndex
+      if (localStageIndex < inCoreStageNumber)
+        core * inCoreStageNumber + localStageIndex
+      else
+        (localStageIndex - inCoreStageNumber) + coreNumber * inCoreStageNumber
     /** given core id and indices in local intra-core stages, return indices in [[stages]] */
     def stageOfCore(core: Int, localStageIndices: Seq[Int]): List[Int] =
       localStageIndices.map(stageOfCore(core, _)).toList
