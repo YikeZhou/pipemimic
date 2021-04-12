@@ -24,14 +24,14 @@ object TestSuite extends App {
   val sameAddressTester = new SameAddress(ppoPipeline)
   for (po <- ppo.ProgramOrder.values) {
     println(s"[Same Address] $po is satisfied: ${sameAddressTester.isSatisfied(po)}")
-    sameAddressTester.getGraphs(po).foreach(_.write(outputDirectory))
+    sameAddressTester.getGraphs(po).foreach(_.write(outputDirectory + "/sameAddr"))
   }
 
   /* 1-2 any address */
   val anyAddressTester = new AnyAddress(ppoPipeline)
   for (po <- ppo.ProgramOrder.values) {
     println(s"[Any Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
-    anyAddressTester.getGraphs(po).foreach(_.write(outputDirectory))
+    anyAddressTester.getGraphs(po).foreach(_.write(outputDirectory + "/anyAddr"))
   }
 
   /*-------------------------------------------------------------------------------------------*/
@@ -45,18 +45,18 @@ object TestSuite extends App {
   for (arg <- args.tail) /* read all test file specified in args[1:] */
     litmusTestsForRVWMO += LitmusTestConstructor(arg)
 
-//  val allLitmusTestGraphs = ListBuffer.empty[DotGraph]
+  val allLitmusTestGraphs = ListBuffer.empty[DotGraph]
 
   for (litmusTest <- litmusTestsForRVWMO) {
     val result = litmusTest.getResults(litmusPipeline)
     // TODO save uhb graph
-//    allLitmusTestGraphs.appendAll(result.unobserved).appendAll(result.observed)
+    allLitmusTestGraphs.appendAll(result.unobserved).appendAll(result.observed)
     assert(result.casesCnt == result.observed.length + result.unobserved.length)
     println(s"observable = ${result.observable} after checking ${result.casesCnt} cases")
   }
 
-//  println(s"found ${allLitmusTestGraphs.length} litmus test results")
+  println(s"found ${allLitmusTestGraphs.length} litmus test results")
 
-//  val dots = allLitmusTestGraphs.toList
-//  dots foreach (dot => dot.write("./graphs"))
+  val dots = allLitmusTestGraphs.toList
+  dots foreach (_.write(outputDirectory + "/litmus"))
 }

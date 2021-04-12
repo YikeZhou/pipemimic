@@ -2,7 +2,14 @@ package pipemimic.pipeline
 
 import pipemimic._
 
-class RVWRPipeline(n: Int) extends Pipeline {
+class RVWRPipeline(n: Int) extends {
+  /** number of intra-core stages */
+  override val inCoreStageNumber: Int = 6
+  /** number of off-core stages (such as main memory or shared cache) */
+  override val unCoreStageNumber: Int = 2
+  /** number of cores (currently only support 1 or 2) */
+  override val coreNumber: Int = n
+} with Pipeline {
   /** described basic features of this pipeline */
   override val pipeName: String = "RISC-V WR"
   /** all stages of this pipeline */
@@ -69,11 +76,6 @@ class RVWRPipeline(n: Int) extends Pipeline {
     }
   }
 
-  /** number of cores (currently only support 1 or 2) */
-  override val coreNumber: Int = n
-  /** number of intra-core stages */
-  override val inCoreStageNumber: Int = inCoreStages(0).length
-
   private def inCoreStages(currentIndex: Int): List[Stage] = {
     List(
       Stage("Fetch", FIFO, NoSpecialEdges),
@@ -85,9 +87,6 @@ class RVWRPipeline(n: Int) extends Pipeline {
         srcPerformStage = stageOfCore(currentIndex, 7),
         dstPerformStage = stageOfCore(currentIndex, 5))))
   }
-
-  /** number of off-core stages (such as main memory or shared cache) */
-  override val unCoreStageNumber: Int = unCoreStages.length
 
   private def unCoreStages: List[Stage] = {
     List(

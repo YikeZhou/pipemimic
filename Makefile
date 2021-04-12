@@ -11,7 +11,7 @@ litmus_tests=$(wildcard $(litmus_test_dir)/*.litmus)
 java_srcs=$(shell cat ./javasrcs)
 antlr_srcs=$(wildcard ./parser/*.g4)
 
-graphs = $(wildcard ./graphs/*.gv)
+graphs = $(shell find graphs -name '*.gv')
 pngs = $(patsubst %.gv, %.png, $(graphs))
 
 testAll:
@@ -43,7 +43,9 @@ loadTests: $(java_srcs) $(litmus_tests)
 
 run: $(java_srcs) $(litmus_tests)
 ifdef arch
-	mkdir -p graphs/$(arch)
+	mkdir -p graphs/$(arch)/sameAddr
+	mkdir -p graphs/$(arch)/anyAddr
+	mkdir -p graphs/$(arch)/litmus
 	mill pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
 endif
 

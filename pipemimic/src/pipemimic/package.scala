@@ -253,11 +253,13 @@ package object pipemimic {
     /** number of off-core stages (such as main memory or shared cache) */
     val unCoreStageNumber: Int
     /** given core id and index in local intra-core stages, return index in [[stages]] */
-    def stageOfCore(core: Int, localStageIndex: Int): Int =
+    def stageOfCore(core: Int, localStageIndex: Int): Int = {
+      require(0 <= localStageIndex && localStageIndex < inCoreStageNumber + unCoreStageNumber)
       if (localStageIndex < inCoreStageNumber)
         core * inCoreStageNumber + localStageIndex
       else
         (localStageIndex - inCoreStageNumber) + coreNumber * inCoreStageNumber
+    }
     /** given core id and indices in local intra-core stages, return indices in [[stages]] */
     def stageOfCore(core: Int, localStageIndices: Seq[Int]): List[Int] =
       localStageIndices.map(stageOfCore(core, _)).toList
