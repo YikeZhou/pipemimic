@@ -71,12 +71,12 @@ object ProgramOrderTest extends App {
 //  for (order <- orders) println(order)
 
   // output header line into csv file
-  val header = "arch, " + orders.map {
+  val header = "arch," + orders.map {
     case ppo.ProgramOrder.ReadAfterRead => "rr"
     case ppo.ProgramOrder.ReadAfterWrite => "wr"
     case ppo.ProgramOrder.WriteAfterRead => "rw"
     case ppo.ProgramOrder.WriteAfterWrite => "ww"
-  }.mkString(", ") + '\n'
+  }.mkString(",") + '\n'
   writer.write(header)
   profiler.write(header)
 
@@ -91,8 +91,8 @@ object ProgramOrderTest extends App {
     val constructor = pipelineFactory.createPipeline(pipelineName)
     val ppoPipeline = constructor.pipelineWithCore(1)
 
-    writer.write(pipelineName + ", ")
-    profiler.write(pipelineName + ", ")
+    writer.write(pipelineName + ",")
+    profiler.write(pipelineName + ",")
 
     /* 1-2 any address */
     val res = ArrayBuffer.empty[String]
@@ -110,8 +110,8 @@ object ProgramOrderTest extends App {
       else
         res.addOne("n")
     }
-    writer.write(res.mkString(", ") + '\n')
-    profiler.write(times.mkString(", ") + '\n')
+    writer.write(res.mkString(",") + '\n')
+    profiler.write(times.mkString(",") + '\n')
   }
 
   writer.write("# Same Address\n")
@@ -125,8 +125,8 @@ object ProgramOrderTest extends App {
     val constructor = pipelineFactory.createPipeline(pipelineName)
     val ppoPipeline = constructor.pipelineWithCore(1)
 
-    writer.write(pipelineName + ", ")
-    profiler.write(pipelineName + ", ")
+    writer.write(pipelineName + ",")
+    profiler.write(pipelineName + ",")
 
     /* 1-2 any address */
     val res = ArrayBuffer.empty[String]
@@ -144,8 +144,8 @@ object ProgramOrderTest extends App {
       println(runtime)
       times.addOne(runtime.timeElapsed.toString)
     }
-    writer.write(res.mkString(", ") + '\n')
-    profiler.write(times.mkString(", ") + '\n')
+    writer.write(res.mkString(",") + '\n')
+    profiler.write(times.mkString(",") + '\n')
   }
 
   writer.close()
@@ -164,8 +164,8 @@ object LitmusSuite extends App {
     constructor.pipelineWithCore(2)
   }
 
-  writer.write("test, " + pipelines.mkString(", ") + '\n')
-  profiler.write("test, " + pipelines.mkString(", ") + '\n')
+  writer.write("test," + pipelines.mkString(",") + '\n')
+  profiler.write("test," + pipelines.mkString(",") + '\n')
 
   for (arg <- args) {
     val testName = arg.substring(57, arg.indexOf(".litmus"))
@@ -185,8 +185,8 @@ object LitmusSuite extends App {
       times.addOne(runtime.timeElapsed.toString)
     }
 
-    writer.write(res.mkString(", ") + '\n')
-    profiler.write(times.mkString(", ") + '\n')
+    writer.write(res.mkString(",") + '\n')
+    profiler.write(times.mkString(",") + '\n')
   }
 
   writer.close()
