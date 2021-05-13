@@ -1,4 +1,4 @@
-# Thu May 13 19:25:32 2021
+# Thu May 13 19:44:23 2021
 test, WR, rWR, rWM, rMM
 2+2W+fence.rw.rw+po, st, st, st, st
 2+2W+fence.rw.rws, st, st, st, st

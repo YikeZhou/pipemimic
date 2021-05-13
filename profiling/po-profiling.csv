@@ -1,1 +1,12 @@
-# Thu May 13 19:25:32 2021
+# Thu May 13 19:44:23 2021
+arch, rr, rw, wr, ww
+# Any Address
+WR, 103, 5, 3, 5
+rWR, 5, 5, 10, 4
+rWM, 4, 4, 6, 6
+rMM, 8, 3, 3, 2
+# Same Address
+WR, 3, 2, 1, 1
+rWR, 2, 3, 7, 3
+rWM, 1, 3, 6, 3
+rMM, 1, 3, 2, 2

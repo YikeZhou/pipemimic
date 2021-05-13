@@ -64,19 +64,25 @@ object TestSuite extends App {
 
 object ProgramOrderTest extends App {
   val writer = new FileWriter("profiling/po-result.csv", true)
+  val profiler = new FileWriter("profiling/po-profiling.csv", true)
 
   val pipelines = Seq("WR", "rWR", "rWM", "rMM")
   val orders = ppo.ProgramOrder.values
-  for (order <- orders) println(order)
+//  for (order <- orders) println(order)
+
   // output header line into csv file
-  writer.write("arch, " + orders.map {
+  val header = "arch, " + orders.map {
     case ppo.ProgramOrder.ReadAfterRead => "rr"
     case ppo.ProgramOrder.ReadAfterWrite => "wr"
     case ppo.ProgramOrder.WriteAfterRead => "rw"
     case ppo.ProgramOrder.WriteAfterWrite => "ww"
-  }.mkString(", ") + '\n')
+  }.mkString(", ") + '\n'
+  writer.write(header)
+  profiler.write(header)
 
   writer.write("# Any Address\n")
+  profiler.write("# Any Address\n")
+
   for (pipelineName <- pipelines) {
     println("**********************************************")
     println(pipelineName + " - PPO Any Address Testing")
@@ -86,22 +92,31 @@ object ProgramOrderTest extends App {
     val ppoPipeline = constructor.pipelineWithCore(1)
 
     writer.write(pipelineName + ", ")
+    profiler.write(pipelineName + ", ")
 
     /* 1-2 any address */
-    val anyAddressTester = new AnyAddress(ppoPipeline)
     val res = ArrayBuffer.empty[String]
+    val times = ArrayBuffer.empty[String]
+
+    val anyAddressTester = new AnyAddress(ppoPipeline)
     for (po <- orders) {
+      val runtime = TinyTimer(po.toString + pipelineName)
       println(s"[Any Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
+      println(runtime)
+      times.addOne(runtime.timeElapsed.toString)
+
       if (anyAddressTester.isSatisfied(po))
         res.addOne("y")
       else
         res.addOne("n")
     }
-    writer.write(res.mkString(", "))
-    writer.write("\n")
+    writer.write(res.mkString(", ") + '\n')
+    profiler.write(times.mkString(", ") + '\n')
   }
 
   writer.write("# Same Address\n")
+  profiler.write("# Same Address\n")
+
   for (pipelineName <- pipelines) {
     println("**********************************************")
     println(pipelineName + " - PPO Same Address Testing")
@@ -111,22 +126,30 @@ object ProgramOrderTest extends App {
     val ppoPipeline = constructor.pipelineWithCore(1)
 
     writer.write(pipelineName + ", ")
+    profiler.write(pipelineName + ", ")
 
     /* 1-2 any address */
-    val anyAddressTester = new SameAddress(ppoPipeline)
     val res = ArrayBuffer.empty[String]
+    val times = ArrayBuffer.empty[String]
+
+    val anyAddressTester = new SameAddress(ppoPipeline)
     for (po <- orders) {
+      val runtime = TinyTimer(po.toString + pipelineName)
       println(s"[Same Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
+
       if (anyAddressTester.isSatisfied(po))
         res.addOne("y")
       else
         res.addOne("n")
+      println(runtime)
+      times.addOne(runtime.timeElapsed.toString)
     }
-    writer.write(res.mkString(", "))
-    writer.write("\n")
+    writer.write(res.mkString(", ") + '\n')
+    profiler.write(times.mkString(", ") + '\n')
   }
 
   writer.close()
+  profiler.close()
 }
 
 object LitmusSuite extends App {
