@@ -69,12 +69,12 @@ object ProgramOrderTest extends App {
   val orders = ppo.ProgramOrder.values
   for (order <- orders) println(order)
   // output header line into csv file
-  writer.write("arch, " + orders.map(_ match {
+  writer.write("arch, " + orders.map {
     case ppo.ProgramOrder.ReadAfterRead => "rr"
     case ppo.ProgramOrder.ReadAfterWrite => "wr"
     case ppo.ProgramOrder.WriteAfterRead => "rw"
     case ppo.ProgramOrder.WriteAfterWrite => "ww"
-  }).mkString(", ") + '\n')
+  }.mkString(", ") + '\n')
 
   writer.write("# Any Address\n")
   for (pipelineName <- pipelines) {
@@ -126,5 +126,29 @@ object ProgramOrderTest extends App {
     writer.write("\n")
   }
 
+  writer.close()
+}
+
+object LitmusSuite extends App {
+  val writer = new FileWriter("profiling/litmus-result.csv", true)
+  val pipelines = Seq("WR", "rWR", "rWM", "rMM")
+  val processors = pipelines map { p =>
+    val pipelineFactory = new PipelineFactory
+    val constructor = pipelineFactory.createPipeline(p)
+    constructor.pipelineWithCore(2)
+  }
+  writer.write("test, " + pipelines.mkString(", ") + '\n')
+  for (arg <- args) {
+    val testName = arg.substring(57, arg.indexOf(".litmus"))
+    val res = ArrayBuffer.empty[String]
+    res.addOne(testName)
+    for (arch <- processors) {
+      if (LitmusTestConstructor(arg).getResults(arch).observable)
+        /* equivalent */ res.addOne("eq")
+      else
+        /* stricter */ res.addOne("st")
+    }
+    writer.write(res.mkString(", ") + '\n')
+  }
   writer.close()
 }
