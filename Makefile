@@ -1,4 +1,4 @@
-.PHONY: testAll testOne graph clean genAntlr loadTests run lines linesEachFile profile
+.PHONY: testAll testOne graph clean genAntlr loadTests run lines linesEachFile profile pgfplots
 
 project_name=pipemimic
 test_target=
@@ -51,12 +51,18 @@ endif
 
 profile: $(java_srcs) $(litmus_tests)
 	mkdir -p profiling
+	# generate data
 	echo "#" $(shell date) > profiling/po-result.csv
 	echo "#" $(shell date) > profiling/po-profiling.csv
 	mill -i --color false pipemimic.runMain pipemimic.ProgramOrderTest
 	echo "#" $(shell date) > profiling/litmus-result.csv
 	echo "#" $(shell date) > profiling/litmus-profiling.csv
 	mill -i --color false pipemimic.runMain pipemimic.LitmusSuite $(litmus_tests)
+
+pgfplots: profile
+	# generate tex file
+	python profiling/po-profiling.py
+	python profiling/litmus-profiling.py
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l

@@ -1,12 +1,12 @@
-# Thu May 13 19:44:23 2021
-arch, rr, rw, wr, ww
+# Thu May 13 21:28:36 2021
+arch,rr,rw,wr,ww
 # Any Address
-WR, y, y, y, y
-rWR, y, y, y, y
-rWM, y, y, y, y
-rMM, y, y, n, n
+WR,y,y,y,y
+rWR,y,y,y,y
+rWM,y,y,y,y
+rMM,y,y,n,n
 # Same Address
-WR, y, y, y, y
-rWR, y, y, y, y
-rWM, y, y, y, y
-rMM, y, y, n, n
+WR,y,y,y,y
+rWR,y,y,y,y
+rWM,y,y,y,y
+rMM,y,y,n,n

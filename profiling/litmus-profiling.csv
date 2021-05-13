@@ -1,38 +1,38 @@
-# Thu May 13 19:44:23 2021
-test, WR, rWR, rWM, rMM
-2+2W+fence.rw.rw+po, 148, 3, 3, 2
-2+2W+fence.rw.rws, 3, 4, 2, 2
-2+2W, 2, 2, 2, 2
-LB+ctrl+po, 182, 19, 15, 16
-LB+ctrls, 11, 10, 9, 8
-LB+data+ctrl, 6, 15, 10, 13
-LB+data+po, 7, 9, 10, 6
-LB+datas, 5, 13, 9, 6
-LB+fence.rw.rw+ctrl, 12, 16, 12, 8
-LB+fence.rw.rw+data, 6, 7, 15, 6
-LB+fence.rw.rw+po, 5, 9, 8, 11
-LB+fence.rw.rws, 5, 10, 9, 8
-LB, 11, 8, 7, 6
-MP+fence.rw.rw+addr, 8, 15, 10, 5
-MP+fence.rw.rw+ctrl, 4, 9, 8, 8
-MP+fence.rw.rw+po, 4, 10, 10, 5
-MP+fence.rw.rws, 4, 16, 10, 5
-MP+po+addr, 10, 9, 9, 10
-MP+po+ctrl, 4, 9, 7, 11
-MP+po+fence.rw.rw, 4, 10, 10, 5
-MP, 4, 12, 8, 5
-R+fence.rw.rw+po, 4, 9, 4, 6
-R+fence.rw.rws, 4, 3, 3, 11
-R+po+fence.rw.rw, 4, 4, 4, 4
-R, 3, 8, 4, 4
-S+fence.rw.rw+ctrl, 10, 6, 3, 5
-S+fence.rw.rw+data, 4, 3, 4, 11
-S+fence.rw.rw+po, 4, 5, 3, 5
-S+fence.rw.rws, 11, 4, 5, 5
-S+po+ctrl, 3, 8, 3, 4
-S+po+data, 4, 3, 3, 4
-S+po+fence.rw.rw, 7, 4, 6, 6
-S, 4, 8, 4, 5
-SB+fence.rw.rw+po, 4, 3, 3, 9
-SB+fence.rw.rws, 3, 5, 4, 5
-SB, 3, 7, 3, 4
+# Thu May 13 21:28:36 2021
+test,WR,rWR,rWM,rMM
+2+2W+fence.rw.rw+po,138,2,1,1
+2+2W+fence.rw.rws,1,1,1,1
+2+2W,1,1,1,1
+LB+ctrl+po,162,15,11,12
+LB+ctrls,5,7,6,4
+LB+data+ctrl,3,5,5,4
+LB+data+po,3,4,5,4
+LB+datas,2,4,4,4
+LB+fence.rw.rw+ctrl,5,6,5,6
+LB+fence.rw.rw+data,2,5,4,4
+LB+fence.rw.rw+po,4,5,4,4
+LB+fence.rw.rws,3,6,6,5
+LB,3,4,5,3
+MP+fence.rw.rw+addr,6,6,6,4
+MP+fence.rw.rw+ctrl,2,5,5,3
+MP+fence.rw.rw+po,2,5,5,3
+MP+fence.rw.rws,2,7,6,3
+MP+po+addr,3,4,4,2
+MP+po+ctrl,2,4,3,2
+MP+po+fence.rw.rw,2,5,4,2
+MP,2,4,4,2
+R+fence.rw.rw+po,3,2,2,4
+R+fence.rw.rws,2,2,2,3
+R+po+fence.rw.rw,2,2,2,3
+R,2,1,1,2
+S+fence.rw.rw+ctrl,7,2,2,3
+S+fence.rw.rw+data,2,2,2,3
+S+fence.rw.rw+po,2,2,2,3
+S+fence.rw.rws,2,2,2,3
+S+po+ctrl,1,2,1,2
+S+po+data,1,3,2,2
+S+po+fence.rw.rw,2,2,2,4
+S,2,2,2,2
+SB+fence.rw.rw+po,2,2,2,3
+SB+fence.rw.rws,2,2,3,5
+SB,2,1,1,2
