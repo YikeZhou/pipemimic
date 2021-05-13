@@ -1,4 +1,4 @@
-.PHONY: testAll testOne graph clean genAntlr loadTests run lines linesEachFile
+.PHONY: testAll testOne graph clean genAntlr loadTests run lines linesEachFile profile
 
 project_name=pipemimic
 test_target=
@@ -48,6 +48,14 @@ ifdef arch
 	mkdir -p graphs/$(arch)/litmus
 	mill pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
 endif
+
+profile: $(java_srcs) $(litmus_tests)
+	mkdir -p profiling
+	echo "#" $(shell date) > profiling/po-result.csv
+	mill -i --color false pipemimic.runMain pipemimic.ProgramOrderTest
+#	echo "#" $(shell date) > profiling/litmus-result.csv
+#	echo "#" $(shell date) > profiling/po-profiling.csv
+#	echo "#" $(shell date) > profiling/litmus-profiling.csv
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l

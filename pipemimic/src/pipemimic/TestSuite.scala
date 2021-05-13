@@ -5,7 +5,8 @@ import pipemimic.pipeline.PipelineFactory
 import pipemimic.ppo.{AnyAddress, SameAddress}
 import pipemimic.statistics.DotGraph
 
-import scala.collection.mutable.ListBuffer
+import java.io.{File, FileWriter, PrintWriter}
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object TestSuite extends App {
   require(args.length >= 2)
@@ -59,4 +60,71 @@ object TestSuite extends App {
 
   val dots = allLitmusTestGraphs.toList
   dots foreach (_.write(outputDirectory + "/litmus"))
+}
+
+object ProgramOrderTest extends App {
+  val writer = new FileWriter("profiling/po-result.csv", true)
+
+  val pipelines = Seq("WR", "rWR", "rWM", "rMM")
+  val orders = ppo.ProgramOrder.values
+  for (order <- orders) println(order)
+  // output header line into csv file
+  writer.write("arch, " + orders.map(_ match {
+    case ppo.ProgramOrder.ReadAfterRead => "rr"
+    case ppo.ProgramOrder.ReadAfterWrite => "wr"
+    case ppo.ProgramOrder.WriteAfterRead => "rw"
+    case ppo.ProgramOrder.WriteAfterWrite => "ww"
+  }).mkString(", ") + '\n')
+
+  writer.write("# Any Address\n")
+  for (pipelineName <- pipelines) {
+    println("**********************************************")
+    println(pipelineName + " - PPO Any Address Testing")
+    println("**********************************************")
+    val pipelineFactory = new PipelineFactory
+    val constructor = pipelineFactory.createPipeline(pipelineName)
+    val ppoPipeline = constructor.pipelineWithCore(1)
+
+    writer.write(pipelineName + ", ")
+
+    /* 1-2 any address */
+    val anyAddressTester = new AnyAddress(ppoPipeline)
+    val res = ArrayBuffer.empty[String]
+    for (po <- orders) {
+      println(s"[Any Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
+      if (anyAddressTester.isSatisfied(po))
+        res.addOne("y")
+      else
+        res.addOne("n")
+    }
+    writer.write(res.mkString(", "))
+    writer.write("\n")
+  }
+
+  writer.write("# Same Address\n")
+  for (pipelineName <- pipelines) {
+    println("**********************************************")
+    println(pipelineName + " - PPO Same Address Testing")
+    println("**********************************************")
+    val pipelineFactory = new PipelineFactory
+    val constructor = pipelineFactory.createPipeline(pipelineName)
+    val ppoPipeline = constructor.pipelineWithCore(1)
+
+    writer.write(pipelineName + ", ")
+
+    /* 1-2 any address */
+    val anyAddressTester = new SameAddress(ppoPipeline)
+    val res = ArrayBuffer.empty[String]
+    for (po <- orders) {
+      println(s"[Same Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
+      if (anyAddressTester.isSatisfied(po))
+        res.addOne("y")
+      else
+        res.addOne("n")
+    }
+    writer.write(res.mkString(", "))
+    writer.write("\n")
+  }
+
+  writer.close()
 }
