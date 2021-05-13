@@ -3,7 +3,7 @@ package pipemimic
 import pipemimic.execution.{LitmusTest, LitmusTestConstructor}
 import pipemimic.pipeline.PipelineFactory
 import pipemimic.ppo.{AnyAddress, SameAddress}
-import pipemimic.statistics.DotGraph
+import pipemimic.statistics.{DotGraph, TinyTimer}
 
 import java.io.{File, FileWriter, PrintWriter}
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -131,24 +131,41 @@ object ProgramOrderTest extends App {
 
 object LitmusSuite extends App {
   val writer = new FileWriter("profiling/litmus-result.csv", true)
+  val profiler = new FileWriter("profiling/litmus-profiling.csv", true)
+
+  /* construct pipeline objects */
   val pipelines = Seq("WR", "rWR", "rWM", "rMM")
   val processors = pipelines map { p =>
     val pipelineFactory = new PipelineFactory
     val constructor = pipelineFactory.createPipeline(p)
     constructor.pipelineWithCore(2)
   }
+
   writer.write("test, " + pipelines.mkString(", ") + '\n')
+  profiler.write("test, " + pipelines.mkString(", ") + '\n')
+
   for (arg <- args) {
     val testName = arg.substring(57, arg.indexOf(".litmus"))
     val res = ArrayBuffer.empty[String]
+    val times = ArrayBuffer.empty[String]
     res.addOne(testName)
+    times.addOne(testName)
+
     for (arch <- processors) {
+      val runtime = TinyTimer(testName) // ms
       if (LitmusTestConstructor(arg).getResults(arch).observable)
         /* equivalent */ res.addOne("eq")
       else
         /* stricter */ res.addOne("st")
+      println(runtime)
+      /* save runtime into profiling csv file */
+      times.addOne(runtime.timeElapsed.toString)
     }
+
     writer.write(res.mkString(", ") + '\n')
+    profiler.write(times.mkString(", ") + '\n')
   }
+
   writer.close()
+  profiler.close()
 }

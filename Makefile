@@ -52,11 +52,11 @@ endif
 profile: $(java_srcs) $(litmus_tests)
 	mkdir -p profiling
 	echo "#" $(shell date) > profiling/po-result.csv
+	echo "#" $(shell date) > profiling/po-profiling.csv
 	mill -i --color false pipemimic.runMain pipemimic.ProgramOrderTest
 	echo "#" $(shell date) > profiling/litmus-result.csv
+	echo "#" $(shell date) > profiling/litmus-profiling.csv
 	mill -i --color false pipemimic.runMain pipemimic.LitmusSuite $(litmus_tests)
-#	echo "#" $(shell date) > profiling/po-profiling.csv
-#	echo "#" $(shell date) > profiling/litmus-profiling.csv
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l

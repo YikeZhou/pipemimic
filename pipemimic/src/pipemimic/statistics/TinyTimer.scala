@@ -3,6 +3,7 @@ package pipemimic.statistics
 class TinyTimer(name: String) {
   var start: Long = _
   var init = false
+  var timeElapsed: Long = 0
 
   def reset(): Unit = {
     init = true
@@ -10,7 +11,7 @@ class TinyTimer(name: String) {
   }
 
   override def toString: String = {
-    val timeElapsed = (System.nanoTime() - start) / 1000000
+    timeElapsed = (System.nanoTime() - start) / 1000000
     if (init) s"Timer<$name>: $timeElapsed ms" else s"Error: Timer<$name> not initialized"
   }
 }
