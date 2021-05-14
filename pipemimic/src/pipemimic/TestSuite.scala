@@ -99,6 +99,9 @@ object ProgramOrderTest extends App {
     val times = ArrayBuffer.empty[String]
 
     val anyAddressTester = new AnyAddress(ppoPipeline)
+    /* warm up */
+    for (po <- orders) new AnyAddress(ppoPipeline).isSatisfied(po)
+
     for (po <- orders) {
       val runtime = TinyTimer(po.toString + pipelineName)
       println(s"[Any Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
@@ -132,12 +135,15 @@ object ProgramOrderTest extends App {
     val res = ArrayBuffer.empty[String]
     val times = ArrayBuffer.empty[String]
 
-    val anyAddressTester = new SameAddress(ppoPipeline)
+    val sameAddressTester = new SameAddress(ppoPipeline)
+    /* warm up */
+    for (po <- orders) new SameAddress(ppoPipeline).isSatisfied(po)
+
     for (po <- orders) {
       val runtime = TinyTimer(po.toString + pipelineName)
-      println(s"[Same Address] $po is satisfied: ${anyAddressTester.isSatisfied(po)}")
+      println(s"[Same Address] $po is satisfied: ${sameAddressTester.isSatisfied(po)}")
 
-      if (anyAddressTester.isSatisfied(po))
+      if (sameAddressTester.isSatisfied(po))
         res.addOne("y")
       else
         res.addOne("n")
@@ -173,6 +179,10 @@ object LitmusSuite extends App {
     val times = ArrayBuffer.empty[String]
     res.addOne(testName)
     times.addOne(testName)
+
+    /* warm up: load class into memory */
+    for (arch <- processors)
+      LitmusTestConstructor(arg).getResults(arch).observable
 
     for (arch <- processors) {
       val runtime = TinyTimer(testName) // ms
