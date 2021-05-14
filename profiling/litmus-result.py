@@ -4,7 +4,7 @@ Project: profiling
 File Created: Thursday, 13th May 2021 11:16:54 pm
 Author: zyk
 -----
-Last Modified: Friday, 14th May 2021 10:34:52 am
+Last Modified: Friday, 14th May 2021 12:23:41 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -32,6 +32,7 @@ with open('./profiling/litmus-result.csv', newline='\n') as csvfile:
   reader = csv.reader(csvfile, delimiter=",")
   line = 1
 
+  data = [list() for i in range(4)] # indexed by y
   for row in reader:
     if line == 1:
       line += 1
@@ -44,7 +45,7 @@ with open('./profiling/litmus-result.csv', newline='\n') as csvfile:
       x = line - 3
       for (r, y) in zip(row[1:], range(4)):
         count[y][r] += 1
-        matrix.write(' '.join(map(str, [x, y, toC(row[y + 1])])) + '\n')
+        data[y].append(' '.join(map(str, [x, y, toC(row[y + 1])])) + '\n')
     line += 1
 
 for k in ['eq', 'st']:
@@ -57,6 +58,8 @@ bar.write("% symbolic x coords={" + ','.join(yticklabels) + "},\n")
 bar.close()
 
 
+for y in range(4):
+  matrix.writelines(data[y])
 matrix.write("% xticklabels={0," + ','.join(xticklabels) + "},\n")
 matrix.write("% yticklabels={0," + ','.join(yticklabels) + "},\n")
 matrix.write("% mesh/cols=" + str(len(xticklabels)) + ',\n')
