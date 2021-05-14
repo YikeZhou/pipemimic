@@ -63,6 +63,8 @@ pgfplots: profile
 	# generate tex file
 	python profiling/po-profiling.py
 	python profiling/litmus-profiling.py
+	python profiling/po-result.py
+	python profiling/litmus-result.py
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l
