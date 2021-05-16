@@ -15,12 +15,12 @@ graphs = $(shell find graphs -name '*.gv')
 pngs = $(patsubst %.gv, %.png, $(graphs))
 
 testAll:
-	mill $(project_name).test
+	mill -i --color false $(project_name).test
 
 testOne:
 ifdef test_target
 	@echo "$(project_name).$(test_target)"
-	mill $(project_name).test.testOne $(project_name).$(test_target)
+	mill -i --color false $(project_name).test.testOne $(project_name).$(test_target)
 else
 	@echo "<test target> argument missing"
 endif
@@ -34,19 +34,19 @@ $(pngs): $(graphs)
 	dot $(patsubst %.png,%.gv,$@) -Tpng -o $@
 
 $(java_srcs): $(antlr_srcs)
-	mill parser.genAntlr
+	mill -i --color false parser.genAntlr
 
 genAntlr: $(java_srcs)
 
 loadTests: $(java_srcs) $(litmus_tests)
-	mill pipemimic.runMain pipemimic.LitmusFileTest $(litmus_tests)
+	mill -i --color false pipemimic.runMain pipemimic.LitmusFileTest $(litmus_tests)
 
 run: $(java_srcs) $(litmus_tests)
 ifdef arch
 	mkdir -p graphs/$(arch)/sameAddr
 	mkdir -p graphs/$(arch)/anyAddr
 	mkdir -p graphs/$(arch)/litmus
-	mill pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
+	mill -i --color false pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
 endif
 
 profile: $(java_srcs) $(litmus_tests)
