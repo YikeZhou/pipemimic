@@ -85,31 +85,58 @@ object LitmusTestConstructor {
 
     for (proc <- 0 until procCnt) {
       var realPoi = 0
+      var prevDst: String = "" // decide data or addr dependency
+      var ctrlDepFlag = false
       for (poi <- 0 until maxPoi(proc)) {
         val curInst = instructions(proc)(poi)
         curInst match {
           case StoreWord(reg, addr) =>
+            if (poi != 0 && (reg == prevDst || addr == prevDst)) {
+              events += Event(eiid, Iiid(proc, realPoi), MemoryFence())
+              eiid += 1
+              realPoi += 1
+            }
             val access = Access(Direction.W, regFile(proc)(addr), regFile(proc)(reg))
             events += Event(eiid, Iiid(proc, realPoi), access)
             eiid += 1
             realPoi += 1
           case LoadWord(reg, addr) =>
+            if (poi != 0 && addr == prevDst) {
+              events += Event(eiid, Iiid(proc, realPoi), MemoryFence())
+              eiid += 1
+              realPoi += 1
+            }
             val valueLoaded = loadValues(proc)(reg)
             val access = Access(Direction.R, regFile(proc)(addr), valueLoaded)
             events += Event(eiid, Iiid(proc, realPoi), access)
             regFile(proc)(reg) = valueLoaded
             eiid += 1
             realPoi += 1
+            prevDst = reg
           case Fence() =>
             events += Event(eiid, Iiid(proc, realPoi), MemoryFence())
             eiid += 1
             realPoi += 1
           case Xor(src1, src2, dst) =>
             regFile(proc)(dst) = regFile(proc)(src1) ^ regFile(proc)(src2)
+            assert(src1 == prevDst || src2 == prevDst)
+            prevDst = dst
           case Ori(src1, src2, dst) =>
             regFile(proc)(dst) = regFile(proc)(src1) | src2
+            assert(src1 == prevDst)
+            prevDst = dst
           case Add(src1, src2, dst) =>
             regFile(proc)(dst) = regFile(proc)(src1) + regFile(proc)(src2)
+            assert(src1 == prevDst || src2 == prevDst)
+            prevDst = dst
+          case BranchNotEqual(src1, src2, target) =>
+            /* no need to update register file */
+            if (src1 == prevDst || src2 == prevDst) {
+              events += Event(eiid, Iiid(proc, realPoi), MemoryFence())
+              eiid += 1
+              realPoi += 1
+            }
+
           case _ =>
         }
       }

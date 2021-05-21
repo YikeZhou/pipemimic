@@ -41,7 +41,11 @@ $(java_srcs): $(antlr_srcs)
 genAntlr: $(java_srcs)
 
 loadTests: $(java_srcs) $(litmus_tests)
-	mill -i --color false pipemimic.runMain pipemimic.LitmusFileTest $(litmus_tests)
+ifdef test_target
+	mill -i --color false pipemimic.runMain pipemimic.execution.LitmusFileTest $(test_target)
+else
+	mill -i --color false pipemimic.runMain pipemimic.execution.LitmusFileTest $(litmus_tests)
+endif
 
 run: $(java_srcs) $(litmus_tests)
 ifdef arch
