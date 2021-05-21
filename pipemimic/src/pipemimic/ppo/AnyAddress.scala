@@ -19,7 +19,7 @@ class AnyAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification {
     val graphs = ListBuffer.empty[DotGraph]
 
     scenarios foreach { case (title, paths) =>
-      println(s"verify ppo at $title")
+//      println(s"verify ppo at $title")
       val staticEdges = StaticEdges(s"PPOGlobal($title)", pipeline, paths)
       /* generate ppo global events */
       val edgesToBeVerified = { // TODO add speculative load reorder events
@@ -33,7 +33,8 @@ class AnyAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification {
             }
             // FIXME when running ppo remote cores always be zero then there will be NO edges to be verified!
             val remoteCores = allCores.filterNot(_ == localCore)
-            GraphTreeLeaf("PPO", PerfWRTiBeforePerfWRTj(src, dst, localCore, List(localCore)))
+            val happensInMainMemory = HappensInMainMemory(src, dst)
+            GraphTreeLeaf("PPO", PerfWRTiBeforePerfWRTj(src, dst, localCore, List(localCore), happensInMainMemory))
 
           case _ => GraphTreeEmptyLeaf[GlobalEvent]
         }

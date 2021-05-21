@@ -15,9 +15,10 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
     * @param po2 with respect to j (local core)
     * @param localCore index of local core
     * @param cores indices of other cores
+    * @param isMainMemory restrict perform stage we chosen
     * @return edges in global graph
     */
-  def PerfWRTiBeforePerfWRTj(po1: PathOption, po2: PathOption, localCore: Int, cores: List[Int])
+  def PerfWRTiBeforePerfWRTj(po1: PathOption, po2: PathOption, localCore: Int, cores: List[Int], isMainMemory: Option[Boolean])
   : List[(GlobalEvent, GlobalEvent, String)] = {
     /**
       * perform stage with respect to i: Given a list of perform stages [l](containing performing locations with respect
@@ -30,8 +31,11 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
     @tailrec
     def PerfWRTiAtStage(l: List[PerformStages], c: Int): Option[Location] = {
       l match {
-        case PerformStages(stg, cores, _, _, _) :: next =>
-          if (cores.contains(c)) Some(stg) else PerfWRTiAtStage(next, c)
+        case PerformStages(stg, cores, _, _, im) :: next =>
+          if (cores.contains(c) && ((isMainMemory.isDefined && isMainMemory.contains(im)) || isMainMemory.isEmpty))
+            Some(stg)
+          else
+            PerfWRTiAtStage(next, c)
         case Nil => None
       }
     }
@@ -95,5 +99,23 @@ trait PreservedProgramOrderVerification extends GlobalGraphID {
     }
     val allPaths = events.map(p.pathsFor(_))
     CartesianProduct(allPaths).map(s => (ScenarioTitle(s), s))
+  }
+
+  /* judge if event happens in main memory
+   * there must be at least 1 entry in performStages of [write] that happens in main memory
+   * and can be taken as sign of a completed store
+   * However, read has two types: normal and store buffer forwarding
+   * and normal's isMainMemory is always true while stbForward's always false */
+  def HappensInMainMemory(src: PathOption, dst: PathOption): Option[Boolean] = {
+    if (src.evt.isRead && dst.evt.isRead) {
+      /* don't care */
+      None
+    } else if (src.evt.isRead) {
+      Some(src.performStages.head.isMainMemory)
+    } else if (dst.evt.isRead) {
+      Some(dst.performStages.head.isMainMemory)
+    } else { /* both write events */
+      Some(true)
+    }
   }
 }

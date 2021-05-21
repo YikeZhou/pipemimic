@@ -21,14 +21,16 @@ class SameAddress(pipeline: Pipeline) extends PreservedProgramOrderVerification 
     val graphs = ListBuffer.empty[DotGraph]
 
     scenarios foreach { case (title, paths) =>
-      println(s"verify ppo at $title")
+//      println(s"verify ppo at $title")
       val staticEdges = StaticEdges(s"PPOLocal($title)", pipeline, paths)
       val edgesToBeVerified = {
         require(paths.length == 2)
         (paths.headOption, paths.lastOption) match {
           case (Some(src), Some(dst)) =>
-            val localCore = src.evt.iiid.proc
-            GraphTreeLeaf("PPO", PerfWRTiBeforePerfWRTj(src, dst, localCore, List(localCore)))
+            val localCore = src.evt.iiid.proc /* actually there is only one core in this situation */
+
+            val happensInMainMemory = HappensInMainMemory(src, dst)
+            GraphTreeLeaf("PPO", PerfWRTiBeforePerfWRTj(src, dst, localCore, List(localCore), happensInMainMemory))
           case _ => GraphTreeEmptyLeaf[GlobalEvent]
         }
       }
