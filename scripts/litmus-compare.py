@@ -4,7 +4,7 @@ Project: profiling
 File Created: Friday, 21st May 2021 3:07:44 pm
 Author: zyk
 -----
-Last Modified: Friday, 21st May 2021 4:08:08 pm
+Last Modified: Friday, 21st May 2021 4:37:06 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -37,7 +37,7 @@ with open("./litmus-tests-riscv/model-results/herd.logs", "r") as std:
 labels = list()
 with open("./profiling/litmus-result.csv", newline='\n') as csvfile:
   output = open("./profiling/lt-compare-result.csv", "w")
-  bar = open("./profiling/lt-compare-result.tex", "w")
+  bar = open("./plots-data/lt-compare-result.tex", "w")
   # record for each arch
   count = [{"eq": 0, "st": 0} for i in range(4)]
 

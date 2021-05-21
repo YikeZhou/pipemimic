@@ -4,7 +4,7 @@ Project: profiling
 File Created: Thursday, 13th May 2021 11:21:45 pm
 Author: zyk
 -----
-Last Modified: Friday, 14th May 2021 10:03:21 am
+Last Modified: Friday, 21st May 2021 4:38:02 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -13,15 +13,15 @@ Modified By: zyk
 import csv
 
 legend = "\\legend{preserved, not-preserved}\n"
-bar_any = open('./profiling/po-any-addr-bar-data.tex', 'w', encoding='utf-8')
+bar_any = open('./plots-data/po-any-addr-bar-data.tex', 'w', encoding='utf-8')
 any_count = [{"y": 0, "n": 0} for i in range(4)]
-bar_same = open('./profiling/po-same-addr-bar-data.tex', 'w', encoding='utf-8')
+bar_same = open('./plots-data/po-same-addr-bar-data.tex', 'w', encoding='utf-8')
 same_count = [{"y": 0, "n": 0} for i in range(4)]
 
-matrix_any = open('./profiling/po-any-addr-matrix-data.tex', 'w', encoding='utf-8')
+matrix_any = open('./plots-data/po-any-addr-matrix-data.tex', 'w', encoding='utf-8')
 matrix_any.write("x y C\n")
 
-matrix_same = open('./profiling/po-same-addr-matrix-data.tex', 'w', encoding='utf-8')
+matrix_same = open('./plots-data/po-same-addr-matrix-data.tex', 'w', encoding='utf-8')
 matrix_same.write("x y C\n")
 
 def toC(v: str):

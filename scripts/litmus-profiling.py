@@ -4,7 +4,7 @@ Project: profiling
 File Created: Thursday, 13th May 2021 7:54:18 pm
 Author: zyk
 -----
-Last Modified: Friday, 14th May 2021 2:12:34 pm
+Last Modified: Friday, 21st May 2021 4:37:30 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -35,7 +35,7 @@ segment = int(len(matrix) / split)
 print("segment: " + str(segment))
 
 for i in range(split):
-  filename = './profiling/litmus-timing-' + str(i) + '.tex'
+  filename = './plots-data/litmus-timing-' + str(i) + '.tex'
   f = open(filename, 'w', encoding='utf-8')
 
   xticklabels = list()

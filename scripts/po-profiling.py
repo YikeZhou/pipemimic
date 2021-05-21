@@ -4,7 +4,7 @@ Project: profiling
 File Created: Thursday, 13th May 2021 8:39:16 pm
 Author: zyk
 -----
-Last Modified: Thursday, 13th May 2021 11:02:35 pm
+Last Modified: Friday, 21st May 2021 4:37:48 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -33,7 +33,7 @@ with open("./profiling/po-profiling.csv", newline='\n') as csvfile:
     line += 1
 
 
-f_same = open('./profiling/po-same-addr-timing.tex', 'w', encoding='utf-8')
+f_same = open('./plots-data/po-same-addr-timing.tex', 'w', encoding='utf-8')
 for arch in range(4):
   f_same.write("\\addplot coordinates {\n")
   for (name, time_ms, idx) in zip(names, same_addr[arch], range(len(names))):
@@ -47,7 +47,7 @@ f_same.write("% xticklabels={" + ','.join(names) + "},")
 f_same.close()
 
 
-f_any = open('./profiling/po-any-addr-timing.tex', 'w', encoding='utf-8')
+f_any = open('./plots-data/po-any-addr-timing.tex', 'w', encoding='utf-8')
 for arch in range(4):
   f_any.write("\\addplot coordinates {\n")
   for (name, time_ms, idx) in zip(names, any_addr[arch], range(len(names))):

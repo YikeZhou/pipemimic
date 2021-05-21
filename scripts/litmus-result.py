@@ -4,7 +4,7 @@ Project: profiling
 File Created: Thursday, 13th May 2021 11:16:54 pm
 Author: zyk
 -----
-Last Modified: Friday, 14th May 2021 12:23:41 pm
+Last Modified: Friday, 21st May 2021 4:37:40 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -12,11 +12,11 @@ Modified By: zyk
 
 import csv
 
-bar = open('./profiling/litmus-bar-data.tex', 'w', encoding='utf-8')
+bar = open('./plots-data/litmus-bar-data.tex', 'w', encoding='utf-8')
 count = [{"eq": 0, "st": 0} for i in range(4)]
 
 
-matrix = open('./profiling/litmus-matrix-data.tex', 'w', encoding='utf-8')
+matrix = open('./plots-data/litmus-matrix-data.tex', 'w', encoding='utf-8')
 matrix.write("x y C\n")
 
 def toC(v: str):
