@@ -1,18 +1,18 @@
-# Fri May 14 11:39:04 2021
+# Fri May 21 19:03:16 2021
 test,WR,rWR,rWM,rMM
 2+2W+fence.rw.rw+po,st,st,st,st
 2+2W+fence.rw.rws,st,st,st,st
 2+2W,st,st,st,st
-LB+ctrl+po,st,eq,eq,st
-LB+ctrls,st,eq,eq,st
-LB+data+ctrl,st,eq,eq,st
-LB+data+po,st,eq,eq,st
-LB+datas,st,eq,eq,st
-LB+fence.rw.rw+ctrl,st,eq,eq,st
-LB+fence.rw.rw+data,st,eq,eq,st
-LB+fence.rw.rw+po,st,eq,eq,st
-LB+fence.rw.rws,st,eq,eq,st
-LB,st,eq,eq,st
+LB+ctrl+po,st,eq,eq,eq
+LB+ctrls,st,eq,eq,eq
+LB+data+ctrl,st,eq,eq,eq
+LB+data+po,st,eq,eq,eq
+LB+datas,st,eq,eq,eq
+LB+fence.rw.rw+ctrl,st,eq,eq,eq
+LB+fence.rw.rw+data,st,eq,eq,eq
+LB+fence.rw.rw+po,st,eq,eq,eq
+LB+fence.rw.rws,st,eq,eq,eq
+LB,st,eq,eq,eq
 MP+fence.rw.rw+addr,st,eq,eq,eq
 MP+fence.rw.rw+ctrl,st,eq,eq,eq
 MP+fence.rw.rw+po,st,eq,eq,eq
