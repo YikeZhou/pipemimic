@@ -1,4 +1,4 @@
-.PHONY: testAll testOne graph genAntlr loadTests run lines linesEachFile profile pgfplots
+.PHONY: testAll testOne graph genAntlr loadTests run lines linesEachFile
 
 project_name=pipemimic
 test_target=
@@ -11,7 +11,7 @@ litmus_tests=$(wildcard $(litmus_test_dir)/*.litmus)
 java_srcs=$(shell cat ./javasrcs)
 antlr_srcs=$(wildcard ./parser/*.g4)
 
-graphs = $(shell find graphs -name '*.gv')
+graphs = $(shell find graphs/$(arch) -name '*.gv')
 pngs = $(patsubst %.gv, %.png, $(graphs))
 
 csv_files=./profiling/po-result.csv profiling/po-profiling.csv profiling/litmus-result.csv profiling/litmus-profiling.csv
@@ -31,7 +31,9 @@ endif
 graph: $(pngs)
 
 $(pngs): $(graphs)
+ifdef arch
 	dot $(patsubst %.png,%.gv,$@) -Tpng -o $@
+endif
 
 $(java_srcs): $(antlr_srcs)
 	mill -i --color false parser.genAntlr
@@ -43,23 +45,46 @@ loadTests: $(java_srcs) $(litmus_tests)
 
 run: $(java_srcs) $(litmus_tests)
 ifdef arch
+	rm -r graphs/$(arch)/
 	mkdir -p graphs/$(arch)/sameAddr
 	mkdir -p graphs/$(arch)/anyAddr
 	mkdir -p graphs/$(arch)/litmus
 	mill -i --color false pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
 endif
 
-$(csv_files): $(java_srcs) $(litmus_tests)
+.PHONY: lt-dbg po-dbg
+
+lt-dbg: $(java_srcs) $(litmus_tests)
+ifdef arch
+	rm -r graphs/$(arch)/litmus
+	mkdir -p graphs/$(arch)/litmus
+	mill -i --color false pipemimic.runMain pipemimic.LitmusTestDebug $(arch) $(litmus_tests)
+endif
+
+po-dbg: $(java_srcs)
+ifdef arch
+	rm -r graphs/$(arch)/sameAddr
+	rm -r graphs/$(arch)/anyAddr
+	mkdir -p graphs/$(arch)/sameAddr
+	mkdir -p graphs/$(arch)/anyAddr
+	mill -i --color false pipemimic.runMain pipemimic.PreservedProgramOrderDebug $(arch)
+endif
+
+.PHONY: ppo litmus pgfplots
+
+ppo: $(java_srcs)
 	mkdir -p profiling
 	# generate data
 	echo "#" $(shell date) > profiling/po-result.csv
 	echo "#" $(shell date) > profiling/po-profiling.csv
-	mill -i --color false pipemimic.runMain pipemimic.ProgramOrderTest
+	mill -i --color false pipemimic.runMain pipemimic.PreservedProgramOrderRelease
+
+litmus: $(java_srcs) $(litmus_tests)
+	mkdir -p profiling
+	# generate data
 	echo "#" $(shell date) > profiling/litmus-result.csv
 	echo "#" $(shell date) > profiling/litmus-profiling.csv
-	mill -i --color false pipemimic.runMain pipemimic.LitmusSuite $(litmus_tests)
-
-profile: $(csv_files)
+	mill -i --color false pipemimic.runMain pipemimic.LitmusTestRelease $(litmus_tests)
 
 pgfplots: $(csv_files) $(log_file)
 	# generate tex file
