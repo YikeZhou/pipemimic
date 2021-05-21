@@ -38,9 +38,23 @@ package object pipeline {
   def storeBufferSpecialEdges(srcPerformStage: Location, dstPerformStage: Location)
                              (eventBefore: List[Event])(e: Event)(eventAfter: List[Event]): GlobalGraph = {
     eventAfter foreach { after =>
-      if (after.dirn.contains(Direction.W)) {
-        /* current store must write to memory before next store value enter store buffer */
+      if (after.isWrite) {
+        /* current store must write to memory before next store value enter store buffer
+        * Used when store buffer size = 1 (hold 1 write a time) or define a total store order */
         return List(((srcPerformStage, e.eiid), (dstPerformStage, after.eiid), "StoreBuffer"))
+      }
+    }
+    Nil
+  }
+
+  def readAfterWriteSpecialEdges(writePerformStage: Location, readPerformStage: Location)
+                                (eventBefore: List[Event])(e: Event)(eventAfter: List[Event]): GlobalGraph = {
+    require(e.isWrite)
+    /* find first read with same addr */
+    eventAfter foreach { after =>
+      if (after.isRead && after.addr == e.addr) {
+        /* read must stall until write finished */
+        return List(((writePerformStage, e.eiid), (readPerformStage, after.eiid), "DataConflict"))
       }
     }
     Nil

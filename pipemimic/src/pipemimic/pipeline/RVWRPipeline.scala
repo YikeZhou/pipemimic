@@ -42,14 +42,14 @@ class RVWRPipeline(n: Int) extends {
           evt = e,
           path = stageOfCore(coreIndex, List.range(0, 8)),
           performStages = List(
-            /* write to store buffer */
-            PerformStages(
-              stage = stageOfCore(coreIndex, 3),
-              cores = List(coreIndex),
-              observability = List(coreIndex),
-              cacheLineInvLoc = None,
-              isMainMemory = false
-            ),
+            /* write to store buffer: cannot forward data */
+//            PerformStages(
+//              stage = stageOfCore(coreIndex, 3),
+//              cores = List(coreIndex),
+//              observability = List(coreIndex),
+//              cacheLineInvLoc = None,
+//              isMainMemory = false
+//            ),
             /* write to main memory */
             PerformStages(
               stage = stageOfCore(coreIndex, 6),
@@ -59,7 +59,8 @@ class RVWRPipeline(n: Int) extends {
               isMainMemory = true
             )
           ),
-          sem = NoSpecialEdges
+          /* forward from main memory when existing data dependency */
+          sem = readAfterWriteSpecialEdges(6, 3)
         ))
       case _ /* Memory Fence */ => List(
         PathOption(
@@ -85,7 +86,7 @@ class RVWRPipeline(n: Int) extends {
       Stage("WriteBack", FIFO, NoSpecialEdges),
       Stage("StoreBuffer", FIFO, storeBufferSpecialEdges(
         srcPerformStage = stageOfCore(currentIndex, 7),
-        dstPerformStage = stageOfCore(currentIndex, 5))))
+        dstPerformStage = stageOfCore(currentIndex, 6))))
   }
 
   private def unCoreStages: List[Stage] = {

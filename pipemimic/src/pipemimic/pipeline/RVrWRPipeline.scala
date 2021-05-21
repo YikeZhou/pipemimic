@@ -61,7 +61,8 @@ class RVrWRPipeline(n: Int) extends {
           performStages = List(
             /* write to store buffer */
             PerformStages(
-              stage = stageOfCore(coreIndex, 3),
+              /* perform at store buffer instead of mem-stage */
+              stage = stageOfCore(coreIndex, 5),
               cores = List(coreIndex),
               observability = List(coreIndex),
               cacheLineInvLoc = None,
@@ -76,7 +77,8 @@ class RVrWRPipeline(n: Int) extends {
               isMainMemory = true
             )
           ),
-          sem = NoSpecialEdges
+          /* forward data from store buffer when existing data dependency */
+          sem = readAfterWriteSpecialEdges(5, 3)
         ))
       case _ /* Memory Fence */ => List(
         PathOption(
@@ -101,8 +103,9 @@ class RVrWRPipeline(n: Int) extends {
       Stage("Memory", FIFO, NoSpecialEdges),
       Stage("WriteBack", FIFO, NoSpecialEdges),
       Stage("StoreBuffer", FIFO, storeBufferSpecialEdges(
+        /* FIFO: until last write commit can write enter mem */
         srcPerformStage = stageOfCore(currentIndex, 7),
-        dstPerformStage = stageOfCore(currentIndex, 5))))
+        dstPerformStage = stageOfCore(currentIndex, 6))))
   }
 
   private def unCoreStages: List[Stage] = {
