@@ -4,7 +4,7 @@ Project: profiling
 File Created: Friday, 21st May 2021 3:07:44 pm
 Author: zyk
 -----
-Last Modified: Friday, 21st May 2021 4:37:06 pm
+Last Modified: Friday, 21st May 2021 7:34:50 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -56,14 +56,15 @@ with open("./profiling/litmus-result.csv", newline='\n') as csvfile:
       testname = row[0]
       buf.append(testname)
       for (obs, idx) in zip(row[1:], range(4)):
-        if obs == 'eq' and result[testname]:
+        if (obs == 'eq' and result[testname]) or (obs == 'st' and (not result[testname])):
           # same as standard model
           buf.append('y')
           count[idx]['eq'] += 1
         else:
-          if not result[testname] and obs == 'eq':
-            print(testname, labels[idx])
-            exit(-1) # ! error
+          if (not result[testname]) and obs == 'eq':
+            print("\033[47;30mError: " + testname + ' ' + labels[idx] + '\033[0m')
+          else:
+            print("Stricter: " + testname + ' ' + labels[idx])
           # stricter than standard model
           buf.append('n')
           count[idx]['st'] += 1
