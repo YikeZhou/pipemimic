@@ -63,11 +63,11 @@ profile: $(csv_files)
 
 pgfplots: $(csv_files) $(log_file)
 	# generate tex file
-	python profiling/po-profiling.py
-	python profiling/litmus-profiling.py
-	python profiling/po-result.py
-	python profiling/litmus-result.py
-	python profiling/litmus-compare.py
+	python scripts/po-profiling.py
+	python scripts/litmus-profiling.py
+	python scripts/po-result.py
+	python scripts/litmus-result.py
+	python scripts/litmus-compare.py
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l
