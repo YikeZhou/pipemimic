@@ -1,4 +1,4 @@
-.PHONY: testAll testOne graph clean genAntlr loadTests run lines linesEachFile profile pgfplots
+.PHONY: testAll testOne graph genAntlr loadTests run lines linesEachFile profile pgfplots
 
 project_name=pipemimic
 test_target=
@@ -14,6 +14,9 @@ antlr_srcs=$(wildcard ./parser/*.g4)
 graphs = $(shell find graphs -name '*.gv')
 pngs = $(patsubst %.gv, %.png, $(graphs))
 
+csv_files=./profiling/po-result.csv profiling/po-profiling.csv profiling/litmus-result.csv profiling/litmus-profiling.csv
+log_file=./litmus-tests-riscv/model-results/herd.logs
+
 testAll:
 	mill -i --color false $(project_name).test
 
@@ -24,9 +27,6 @@ ifdef test_target
 else
 	@echo "<test target> argument missing"
 endif
-
-clean:
-	rm -r graphs
 
 graph: $(pngs)
 
@@ -49,7 +49,7 @@ ifdef arch
 	mill -i --color false pipemimic.runMain pipemimic.TestSuite $(arch) $(litmus_tests)
 endif
 
-profile: $(java_srcs) $(litmus_tests)
+$(csv_files): $(java_srcs) $(litmus_tests)
 	mkdir -p profiling
 	# generate data
 	echo "#" $(shell date) > profiling/po-result.csv
@@ -59,12 +59,15 @@ profile: $(java_srcs) $(litmus_tests)
 	echo "#" $(shell date) > profiling/litmus-profiling.csv
 	mill -i --color false pipemimic.runMain pipemimic.LitmusSuite $(litmus_tests)
 
-pgfplots: profile
+profile: $(csv_files)
+
+pgfplots: $(csv_files) $(log_file)
 	# generate tex file
 	python profiling/po-profiling.py
 	python profiling/litmus-profiling.py
 	python profiling/po-result.py
 	python profiling/litmus-result.py
+	python profiling/litmus-compare.py
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l
