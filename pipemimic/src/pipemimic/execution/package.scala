@@ -42,9 +42,8 @@ package object execution {
   }
 
   def performStagesWithRespectToCore(core: Int, po: PathOption): List[Int] = {
-    val performStages = po.performStages
     val result = ListBuffer.empty[Int]
-    for (performStage <- performStages if performStage.cores.contains(core)) result += performStage.stage
+    for (performStage <- po.performStages if performStage.cores.contains(core)) result += performStage.stage
     result.toList
   }
 

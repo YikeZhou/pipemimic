@@ -11,8 +11,8 @@ trait FromReadEdge {
   private def frInitialPerformPairs(src: PathOption, dst: PathOption) = {
     val srcCore = src.evt.iiid.proc
     val dstCore = dst.evt.iiid.proc
-    val srcPerfStages = performOrInvalidStagesWithRespectToCore(dstCore, src)
-    val dstPerfStages = performStagesWithRespectToCore(srcCore, dst)
+    val srcPerfStages = performOrInvalidStagesWithRespectToCore(dstCore, src) /* Read */
+    val dstPerfStages = performStagesWithRespectToCore(srcCore, dst) /* Write */
     CartesianProduct(srcPerfStages, dstPerfStages)
   }
 

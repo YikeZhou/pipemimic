@@ -45,7 +45,7 @@ class RVrWRPipeline(n: Int) extends {
             PerformStages(
               stage = stageOfCore(coreIndex, 3),
               cores = List.range(0, n),
-              observability = List(coreIndex),
+              observability = /*List(coreIndex)*/List.range(0, n),
               cacheLineInvLoc = None,
               isMainMemory = false
             )

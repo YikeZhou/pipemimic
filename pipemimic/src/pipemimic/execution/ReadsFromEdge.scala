@@ -10,8 +10,8 @@ trait ReadsFromEdge extends GlobalGraphID {
   private def rfPerformPairs(src: PathOption, dst: PathOption) = {
     val srcCore = src.evt.iiid.proc
     val dstCore = dst.evt.iiid.proc
-    val srcPerfStages = performStagesWithRespectToCore(dstCore, src)
-    val dstPerfStages = visibleStagesWithRespectToCore(srcCore, dst)
+    val srcPerfStages = performStagesWithRespectToCore(dstCore, src) /* Write */
+    val dstPerfStages = visibleStagesWithRespectToCore(srcCore, dst) /* Read */
     CartesianProduct(srcPerfStages, dstPerfStages)
   }
 

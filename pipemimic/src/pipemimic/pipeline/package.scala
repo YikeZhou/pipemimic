@@ -87,8 +87,15 @@ package object pipeline {
 
         case Access(Direction.W, _, _) =>
           /* happens before all store events in eventsAfter */
-          for (latter <- eventAfter if latter.dirn.contains(Direction.W))
-            edges += (((storePerformStage, eiid), (storePerformStage, latter.eiid), "FenceTSO"))
+//          for (latter <- eventAfter if latter.dirn.contains(Direction.W))
+//            edges += (((storePerformStage, eiid), (storePerformStage, latter.eiid), "FenceTSO"))
+          /* FIXME remove this will cause SB permitted which is conflict with herd.logs result */
+          for (latter <- eventAfter) {
+            if (latter.dirn.contains(Direction.W))
+              edges += (((storePerformStage, eiid), (storePerformStage, latter.eiid), "FenceTSO"))
+            else if (latter.dirn.contains(Direction.R))
+              edges += (((storePerformStage, eiid), (loadPerformStage, latter.eiid), "FenceTSO"))
+          }
 
         case _ =>
       }
