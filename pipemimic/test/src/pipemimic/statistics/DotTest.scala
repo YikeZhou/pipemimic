@@ -1,18 +1,17 @@
 package pipemimic.statistics
 
 import org.scalatest.flatspec.AnyFlatSpec
-import pipemimic.Dot._
 import pipemimic._
 
 import scala.annotation.tailrec
 
 class DotTest extends AnyFlatSpec {
-  "FormatString" should "drop empty string in list" in {
-    assert(FormatString(List("", "")).isEmpty)
-    assert(FormatString(List("a")) == "[a]")
-    assert(FormatString(List("a", "")) == "[a]")
-    assert(FormatString(List("a", "b")) == "[a,b]")
-  }
+//  "FormatString" should "drop empty string in list" in {
+//    assert(FormatString(List("", "")).isEmpty)
+//    assert(FormatString(List("a")) == "[a]")
+//    assert(FormatString(List("a", "")) == "[a]")
+//    assert(FormatString(List("a", "b")) == "[a,b]")
+//  }
 
   "DotGraph" should "export correct dot graph" in {
     val e0 = Event(0, Iiid(0, 0), Access(Direction.R, 0, 0))
@@ -57,11 +56,9 @@ class DotTest extends AnyFlatSpec {
       }
     }
 
-    println(DotGraph("sample", myGraph.map(myGepid), myUngeid, myNString, Nil, Nil, 5))
-
 //    "DotGraph class" should "generate correct graph as well"
     val dot = new DotGraph("sample", myGraph.map(myGepid), myUngeid, myNString, Nil, Nil, 5)
     println(dot.formattedGraph)
-    dot.write("./graphs")
+//    dot.write("./graphs")
   }
 }
