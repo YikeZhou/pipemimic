@@ -24,7 +24,7 @@ class RVrMMPipeline(n: Int) extends {
         PathOption(
           optionName = s"Read${e.addr.get}",
           evt = e,
-          path = stageOfCore(coreIndex, List.range(0, 5)) ::: stageOfCore(coreIndex, List.range(6, 9)),
+          path = stageOfCore(coreIndex, List.range(0, 5)) ::: stageOfCore(coreIndex, List.range(6, 8)),
           performStages = List(
             PerformStages(
               stage = stageOfCore(coreIndex, 4 /* execute stage */),
@@ -92,15 +92,15 @@ class RVrMMPipeline(n: Int) extends {
       Stage("CacheLineInvalidate", NoOrderGuarantees, NoSpecialEdges),
       Stage("WriteBack", NoOrderGuarantees, NoSpecialEdges),
       Stage("Commit", restore(stageOfCore(currentIndex, 2)), NoSpecialEdges),
-      Stage("StoreBuffer", sameAddressOrdered, storeBufferSpecialEdges(
+      Stage("StoreBuffer", sameAddressOrdered, NoSpecialEdges/*storeBufferSpecialEdges(
         srcPerformStage = stageOfCore(currentIndex, 10),
         dstPerformStage = stageOfCore(currentIndex, 7)
-      )))
+      )*/))
   }
 
   private def unCoreStages: List[Stage] = {
     List(
-      Stage("L2CacheForWrites", NoOrderGuarantees, NoSpecialEdges),
+      Stage("L2CacheForWrites", sameAddressOrdered, NoSpecialEdges),
       Stage("Retire", NoOrderGuarantees, NoSpecialEdges))
   }
 }

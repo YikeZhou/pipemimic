@@ -100,14 +100,14 @@ class RVrWMPipeline(n: Int) extends {
       Stage("Execute", FIFO, NoSpecialEdges),
       Stage("Memory", FIFO, NoSpecialEdges),
       Stage("WriteBack", FIFO, NoSpecialEdges),
-      Stage("StoreBuffer", sameAddressOrdered, storeBufferSpecialEdges(
+      Stage("StoreBuffer", sameAddressOrdered, NoSpecialEdges /*storeBufferSpecialEdges(
         srcPerformStage = stageOfCore(currentIndex, 7),
-        dstPerformStage = stageOfCore(currentIndex, 5))))
+        dstPerformStage = stageOfCore(currentIndex, 5))*/))
   }
 
   private def unCoreStages: List[Stage] = {
     List(
-      Stage("MainMemory", NoOrderGuarantees, NoSpecialEdges),
+      Stage("MainMemory", sameAddressOrdered, NoSpecialEdges),
       Stage("Retire", FIFO, NoSpecialEdges))
   }
 }
