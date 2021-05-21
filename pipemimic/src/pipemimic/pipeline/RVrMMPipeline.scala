@@ -67,18 +67,7 @@ class RVrMMPipeline(n: Int) extends {
             loadPerformStage = stageOfCore(coreIndex, 3/* relative load come back to issue */)
           )
         ))
-      case _ /* Memory Fence */ => List(
-        PathOption(
-          optionName = "Fence",
-          evt = e,
-          path = stageOfCore(coreIndex, List.range(0, 5)),
-          performStages = Nil,
-          sem = fenceTSOSpecialEdges(
-            storePerformStage = stageOfCore(coreIndex, 6),
-            loadPerformStage = stageOfCore(coreIndex, 3)
-          )
-        )
-      )
+      case _ /* Memory Fence */ => fencePathOptions(0, e, stageOfCore, coreIndex, 9, 4)
     }
   }
 

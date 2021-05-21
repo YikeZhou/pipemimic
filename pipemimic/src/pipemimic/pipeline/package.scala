@@ -136,4 +136,17 @@ package object pipeline {
     edges.toList
   }
 
+  def fencePathOptions(fencePerformStage: Location, e: Event, stageOfCore: (Processor, Location) => Location,
+                       coreIndex: Processor, storePerformStg: Location, loadPerformStg: Location) = List(
+    PathOption(
+      optionName = "Fence",
+      evt = e,
+      path = List(stageOfCore(coreIndex, fencePerformStage)),
+      performStages = Nil,
+      sem = fenceTSOSpecialEdges(
+        storePerformStage = stageOfCore(coreIndex, storePerformStg),
+        loadPerformStage = stageOfCore(coreIndex, loadPerformStg)
+      )
+    )
+  )
 }

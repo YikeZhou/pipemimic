@@ -80,18 +80,7 @@ class RVrWRPipeline(n: Int) extends {
           /* forward data from store buffer when existing data dependency */
           sem = readAfterWriteSpecialEdges(5, 3)
         ))
-      case _ /* Memory Fence */ => List(
-        PathOption(
-          optionName = "Fence",
-          evt = e,
-          path = stageOfCore(coreIndex, List.range(0, 5)),
-          performStages = Nil,
-          sem = fenceTSOSpecialEdges(
-            storePerformStage = stageOfCore(coreIndex, 6),
-            loadPerformStage = stageOfCore(coreIndex, 3)
-          )
-        )
-      )
+      case _ /* Memory Fence */ => fencePathOptions(0, e, stageOfCore, coreIndex, 6, 3)
     }
   }
 
