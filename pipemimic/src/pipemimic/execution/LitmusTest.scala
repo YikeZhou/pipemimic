@@ -6,7 +6,7 @@ import pipemimic.topology.VerifyMustHappenBeforeInGraph
 
 import scala.collection.mutable.ListBuffer
 
-class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events: List[Event])
+class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events: List[Event], state: Map[Int, Int])
   extends ScenariosForEvents /* generate scenarios */
   with WriteSerializationEdge /* ws edges */
   with ReadsFromEdge /* rf edges */
@@ -115,7 +115,7 @@ class LitmusTest(name: String, expected: LitmusTestExpectedResult.Value, events:
         /* verify a single scenario for current rf candidate */
         val staticEdges = StaticEdges(scTitle, pipeline, scenario)
 
-        val ws = wsEdges(scenario)
+        val ws = wsEdges(scenario, state)
         val rf = rfEdges(ws, eiidPairs, scenario, pipeline)
         val fr = frEdges(readsFromInitValue.map(_._2), scenario, pipeline)
 

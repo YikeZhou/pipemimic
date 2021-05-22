@@ -48,15 +48,40 @@ trait WriteSerializationEdge {
   }
 
 
-  def wsEdges(s: Scenario): GraphTree[GlobalEvent] = {
+  def wsEdges(s: Scenario, finalState: Map[Int, Int]): GraphTree[GlobalEvent] = {
     val edgesPerInterleaving = {
       val sortedByLocation = sortByAddress(s)
       val writeEventsSortByLocThenCore = sortedByLocation.map(sortByCore)
       /* element in wsCandidateForEachLocation : all possibilities of write serialization for location 0~n */
       val wsCandidateForEachLocation = writeEventsSortByLocThenCore.map(Interleaving[GlobalEvent](_: _*))
-      /* for each possible case, generate a edge list */
-      /* when there is only 1 write op at location, no ws edge will be generated */
-      wsCandidateForEachLocation.map(_.map(_.pairConsecutive("WS")))
+      /* check if each interleaves meet requested final state */
+      wsCandidateForEachLocation map { wsCandidateForOneLocation =>
+        wsCandidateForOneLocation filter { oneCandidate =>
+          /* the last write in list of pairs */
+          val lastWrite = oneCandidate.lastOption
+          if (lastWrite.isEmpty || finalState.isEmpty)
+            true
+          else {
+            val writeEvent = s.find(_.evt.eiid == lastWrite.get._2)
+            writeEvent match {
+              case None => sys.error("last write eiid not exist in scenario")
+              case Some(po) =>
+                assert(po.evt.isWrite)
+                po.evt.action match {
+                  case Access(direction, address, value) =>
+                    if (finalState.contains(address))
+                      value == finalState(address) /* must equal to final state */
+                    else
+                      true /* no constraint */
+                }
+            }
+          }
+        }
+      } map { wsCandidateForOneLocation =>
+        /* for each possible case, generate a edge list */
+        /* when there is only 1 write op at location, no ws edge will be generated */
+        wsCandidateForOneLocation.map(_.pairConsecutive("WS"))
+      }
     }
     /* turn list of global edges into a graph tree */
     val rawGraph = GraphTree(TreeNodeType.And, edgesPerInterleaving.map { wsCandidatesAtLocation =>

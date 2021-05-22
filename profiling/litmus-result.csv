@@ -1,4 +1,4 @@
-# Sat May 22 00:27:11 2021
+# Sat May 22 11:35:09 2021
 test,WR,rWR,rWM,rMM
 2+2W+fence.rw.rw+po,st,st,st,st
 2+2W+fence.rw.rws,st,st,st,st
@@ -22,17 +22,17 @@ MP+po+ctrl,st,st,eq,eq
 MP+po+fence.rw.rw,st,st,eq,eq
 MP,st,st,eq,eq
 R+fence.rw.rw+po,eq,eq,eq,eq
-R+fence.rw.rws,eq,eq,eq,eq
-R+po+fence.rw.rw,eq,eq,eq,eq
+R+fence.rw.rws,st,st,st,st
+R+po+fence.rw.rw,st,st,eq,eq
 R,eq,eq,eq,eq
-S+fence.rw.rw+ctrl,eq,eq,eq,eq
-S+fence.rw.rw+data,eq,eq,eq,eq
-S+fence.rw.rw+po,eq,eq,eq,eq
-S+fence.rw.rws,eq,eq,eq,eq
-S+po+ctrl,eq,eq,eq,eq
-S+po+data,eq,eq,eq,eq
-S+po+fence.rw.rw,eq,eq,eq,eq
-S,eq,eq,eq,eq
+S+fence.rw.rw+ctrl,st,st,st,st
+S+fence.rw.rw+data,st,st,st,st
+S+fence.rw.rw+po,st,st,st,eq
+S+fence.rw.rws,st,st,st,st
+S+po+ctrl,st,st,eq,eq
+S+po+data,st,st,eq,eq
+S+po+fence.rw.rw,st,st,eq,eq
+S,st,st,eq,eq
 SB+fence.rw.rw+po,eq,eq,eq,eq
 SB+fence.rw.rws,st,st,st,st
 SB,eq,eq,eq,eq

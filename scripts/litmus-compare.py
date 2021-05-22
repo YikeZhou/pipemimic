@@ -4,7 +4,7 @@ Project: profiling
 File Created: Friday, 21st May 2021 3:07:44 pm
 Author: zyk
 -----
-Last Modified: Friday, 21st May 2021 7:34:50 pm
+Last Modified: Saturday, 22nd May 2021 9:52:59 am
 Modified By: zyk
 -----
 2021 - HUST
@@ -26,6 +26,7 @@ with open("./profiling/litmus-result.csv", newline='\n') as csvfile:
 
 # find result in herd logs
 result = dict()
+updatetime = 0
 with open("./litmus-tests-riscv/model-results/herd.logs", "r") as std:
   for line in std.readlines():
     if line.startswith('Observation'):
@@ -33,6 +34,8 @@ with open("./litmus-tests-riscv/model-results/herd.logs", "r") as std:
       testname = info[1]
       if testname in names:
         result[testname] = info[2] == 'Sometimes'
+        updatetime += 1
+assert(updatetime == len(result)) # check if duplicate entry exists in logs file
 
 labels = list()
 with open("./profiling/litmus-result.csv", newline='\n') as csvfile:

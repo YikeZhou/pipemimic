@@ -36,24 +36,15 @@ object LitmusTestConstructor {
   def apply(name: String, testCase: TestCase): LitmusTest = {
 //    println(testCase)
 
-    /* assign values to x and y if given in 'exists' */
-    val memMap = mutable.Map.empty[String, Int]
+    /* assign real addr to x and y */
+    val memMap = Map("x" -> 1, "y" -> 2)
+
+    /* record final values at addr x and y if given in 'exists' */
+    val finalState = mutable.Map.empty[Int, Int]
+
     for (exp <- testCase.exp.other) {
       assert(exp.proc == -1)
-      memMap += exp.loc -> exp.value.toInt
-    }
-    /* if not, assign an unused value to x or y */
-    if (memMap.size < procCnt) {
-      if (memMap.contains("x")) {
-        memMap += "y" -> 1
-      }
-      else if (memMap.contains("y")) {
-        memMap += "x" -> 1
-      }
-      else {
-        memMap += "x" -> 1
-        memMap += "y" -> 2
-      }
+      finalState += memMap(exp.loc) -> exp.value.toInt
     }
 
     val maxPoi = Seq(testCase.inst.core1.length, testCase.inst.core2.length)
@@ -142,7 +133,7 @@ object LitmusTestConstructor {
       }
     }
     println(events)
-    new LitmusTest(name, LitmusTestExpectedResult.Permitted, events.toList)
+    new LitmusTest(name, LitmusTestExpectedResult.Permitted, events.toList, finalState.toMap)
   }
 
   sealed trait Body
