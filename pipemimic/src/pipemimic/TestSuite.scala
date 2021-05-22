@@ -6,6 +6,7 @@ import pipemimic.ppo.{AnyAddress, SameAddress}
 import pipemimic.statistics.{DotGraph, TinyTimer}
 
 import java.io.{File, FileWriter, PrintWriter}
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object TestSuite extends App {
@@ -133,14 +134,20 @@ object PreservedProgramOrderRelease extends App {
 //  for (order <- orders) println(order)
 
   // output header line into csv file
-  val header = "arch," + orders.map {
-    case ppo.ProgramOrder.ReadAfterRead => "rr"
-    case ppo.ProgramOrder.ReadAfterWrite => "wr"
-    case ppo.ProgramOrder.WriteAfterRead => "rw"
-    case ppo.ProgramOrder.WriteAfterWrite => "ww"
-  }.mkString(",") + '\n'
-  writer.write(header)
-  profiler.write(header)
+  val header = new StringBuilder("arch")
+  for (po <- orders) {
+    header.append(',')
+    header.append(
+      po match {
+        case ppo.ProgramOrder.ReadAfterRead => "rr"
+        case ppo.ProgramOrder.ReadAfterWrite => "wr"
+        case ppo.ProgramOrder.WriteAfterRead => "rw"
+        case ppo.ProgramOrder.WriteAfterWrite => "ww"
+      }
+    )
+  }
+  writer.write(header.toString() + '\n')
+  profiler.write(header.toString() + '\n')
 
   writer.write("# Any Address\n")
   profiler.write("# Any Address\n")
