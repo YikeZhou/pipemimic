@@ -4,7 +4,7 @@ Project: profiling
 File Created: Thursday, 13th May 2021 11:16:54 pm
 Author: zyk
 -----
-Last Modified: Friday, 21st May 2021 4:37:40 pm
+Last Modified: Saturday, 22nd May 2021 11:38:54 am
 Modified By: zyk
 -----
 2021 - HUST
@@ -53,7 +53,7 @@ for k in ['eq', 'st']:
   for i in range(4):
     bar.write('(' + yticklabels[i] + ',' + str(count[i][k]) + ')\n')
   bar.write('};\n')
-bar.write("\\legend{equal,stricter}\n")
+bar.write("\\legend{Equal,Stricter}\n")
 bar.write("% symbolic x coords={" + ','.join(yticklabels) + "},\n")
 bar.close()
 
