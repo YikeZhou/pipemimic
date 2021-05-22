@@ -95,8 +95,8 @@ pgfplots: $(csv_files) $(log_file)
 	python scripts/po-profiling.py
 	python scripts/litmus-profiling.py
 	python scripts/po-result.py
-	python scripts/litmus-result.py
 	python scripts/litmus-compare.py
+	python scripts/litmus-result.py ./profiling/litmus-result-std.csv
 
 lines:
 	( find ./pipemimic/ -name '*.scala' -print0 | xargs -0 cat ) | wc -l
