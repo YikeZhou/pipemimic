@@ -4,7 +4,7 @@ Project: profiling
 File Created: Thursday, 13th May 2021 11:21:45 pm
 Author: zyk
 -----
-Last Modified: Friday, 21st May 2021 4:38:02 pm
+Last Modified: Saturday, 22nd May 2021 6:46:25 pm
 Modified By: zyk
 -----
 2021 - HUST
@@ -12,16 +12,18 @@ Modified By: zyk
 
 import csv
 
-legend = "\\legend{preserved, not-preserved}\n"
+legend = "\\legend{Preserved, Not Preserved}\n"
 bar_any = open('./plots-data/po-any-addr-bar-data.tex', 'w', encoding='utf-8')
 any_count = [{"y": 0, "n": 0} for i in range(4)]
 bar_same = open('./plots-data/po-same-addr-bar-data.tex', 'w', encoding='utf-8')
 same_count = [{"y": 0, "n": 0} for i in range(4)]
 
 matrix_any = open('./plots-data/po-any-addr-matrix-data.tex', 'w', encoding='utf-8')
+matrix_any.write('table [meta=C] {\n')
 matrix_any.write("x y C\n")
 
 matrix_same = open('./plots-data/po-same-addr-matrix-data.tex', 'w', encoding='utf-8')
+matrix_same.write('table [meta=C] {\n')
 matrix_same.write("x y C\n")
 
 def toC(v: str):
@@ -94,8 +96,10 @@ bar_same.close()
 
 matrix_any.write("% xticklabels={0," + ','.join(xticklabels) + "},\n")
 matrix_any.write("% yticklabels={0," + ','.join(yticklabels_any) + "},\n")
+matrix_any.write('};\n')
 matrix_any.close()
 
 matrix_same.write("% xticklabels={0," + ','.join(xticklabels) + "},\n")
 matrix_same.write("% yticklabels={0," + ','.join(yticklabels_same) + "},\n")
+matrix_same.write('};\n')
 matrix_same.close()
